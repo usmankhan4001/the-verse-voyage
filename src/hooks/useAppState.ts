@@ -145,6 +145,14 @@ export function useAppState() {
           const existingContent = newProgress[key]?.contentChecklist || {};
           const incomingContent = sess.contentChecklist || {};
 
+          const defaultContent = {
+            arabicCard: true,
+            audio: !!sess.ayatAudioUrl,
+            wordByWord: true,
+            tafseer: !!sess.tafseerSummary,
+            posted: true,
+          };
+
           newProgress[key] = {
             ...newProgress[key],
             ...sess,
@@ -152,11 +160,7 @@ export function useAppState() {
             sessionIndex: sess.sessionIndex,
             completed: true,
             contentChecklist: {
-              arabicCard: true,
-              audio: !!sess.ayatAudioUrl,
-              wordByWord: true,
-              tafseer: !!sess.tafseerSummary,
-              posted: true,
+              ...defaultContent,
               ...existingContent,
               ...incomingContent,
             },
