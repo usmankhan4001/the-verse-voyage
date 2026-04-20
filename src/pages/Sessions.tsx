@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   FileDown, 
   FileUp, 
@@ -6,15 +6,13 @@ import {
   Settings2, 
   Search,
   BookOpen,
-  ChevronRight,
   ExternalLink,
-  CheckCircle2,
   Trash2,
   AlertCircle
 } from 'lucide-react';
 import { useAppState } from '../context/AppContext';
 import { surahs, getTotalSessions } from '../data/surahs';
-import { getSessionKey, SessionDefinition } from '../data/store';
+import type { SessionDefinition } from '../data/store';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';

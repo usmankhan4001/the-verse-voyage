@@ -1,14 +1,11 @@
-import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
-  BookOpen,
   CalendarCheck,
   Users,
   Settings,
   Moon,
   Sun,
-  HelpCircle,
   LogOut,
 } from 'lucide-react';
 import { useAppState } from '../../context/AppContext';
@@ -22,7 +19,7 @@ const navItems = [
 
 export default function Sidebar() {
   const { state, dispatch } = useAppState();
-  const navigate = useNavigate();
+  useNavigate();
 
   const toggleTheme = () => {
     const next = state.settings.theme === 'dark' ? 'light' : 'dark';

@@ -12,16 +12,18 @@ import {
   CheckCircle2,
   BookOpen,
   X,
-  Download,
-  Gamepad2,
-  User
+  Gamepad2
 } from 'lucide-react';
 import { useAppState } from '../../context/AppContext';
 import { surahs, phaseInfo, getSurahsByPhase, getTotalSessions } from '../../data/surahs';
-import { getSessionKey, getMastery, isSessionLocked, Student } from '../../data/store';
+import { 
+  getSessionKey, 
+  getMastery, 
+  isSessionLocked 
+} from '../../data/store';
+import type { Student } from '../../data/store';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-import Badge from '../../components/ui/Badge';
 import ProgressBar from '../../components/ui/ProgressBar';
 
 export default function StudentPortal() {
@@ -143,7 +145,8 @@ export default function StudentPortal() {
         updates: { pdfViewed: true }
       }
     });
-    const sess = surahs.find(s => s.num === viewingSession.surahNum)?.defaultSessions?.[viewingSession.idx];
+    const rawSess = surahs.find(s => s.num === viewingSession.surahNum)?.defaultSessions?.[viewingSession.idx];
+    const sess = rawSess as any; 
     if (sess?.pdfUrl) window.open(sess.pdfUrl, '_blank');
   };
 

@@ -1,11 +1,8 @@
-import React from 'react';
 import { 
   Users, 
   BookOpen, 
-  Calendar, 
   TrendingUp, 
   AlertTriangle,
-  ChevronRight,
   Plus
 } from 'lucide-react';
 import { useAppState } from '../context/AppContext';
@@ -81,8 +78,8 @@ export default function AdminDashboard() {
             <Button variant="ghost" size="sm">View All</Button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {state.students.slice(0, 5).map(student => (
-              <div key={student.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderBottom: '1px solid var(--border)', lastChild: { border: 0 } }}>
+            {state.students.slice(0, 5).map((student, i) => (
+              <div key={student.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderBottom: i === state.students.slice(0, 5).length - 1 ? 0 : '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 600 }}>
                     {student.name[0]}
@@ -108,7 +105,6 @@ export default function AdminDashboard() {
            <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '24px' }}>Phase Delivery</h3>
            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {[1, 2, 3, 4, 5].map(p => {
-                const totalInPhase = getTotalSessions(); // Mock logic for now
                 const publishedInPhase = Object.values(state.curriculum).filter(s => {
                    const surah = surahs.find(sur => sur.num === s.surahNum);
                    return surah?.phase === p;
@@ -121,7 +117,7 @@ export default function AdminDashboard() {
                       <span>Phase {p}</span>
                       <span style={{ fontWeight: 600 }}>{progress}%</span>
                     </div>
-                    <ProgressBar progress={progress} variant={p === state.settings.currentPhase ? 'primary' : 'muted'} />
+                    <ProgressBar progress={progress} variant={p === state.settings.currentPhase ? 'primary' : undefined} />
                   </div>
                 )
               })}

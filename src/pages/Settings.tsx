@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   ShieldCheck, 
   User, 
   Map, 
-  Palette, 
   Save,
   RefreshCcw,
   BookOpen
@@ -13,7 +12,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 
 export default function Settings() {
-  const { state, dispatch } = useAppState();
+  const { state } = useAppState();
   const [formData, setFormData] = useState({
     teacherName: state.settings.teacherName,
     adminPasscode: state.settings.adminPasscode,
@@ -104,7 +103,7 @@ export default function Settings() {
         </form>
 
         <aside style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <Card padding="md" style={{ border: '1px solid var(--error)20', background: 'var(--error)05' }}>
+          <Card padding="md" className="danger-zone-card">
              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--error)', marginBottom: '12px' }}>
                 <ShieldCheck size={20} />
                 <h4 style={{ fontSize: '14px', fontWeight: 600 }}>Danger Zone</h4>

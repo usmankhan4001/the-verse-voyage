@@ -1,10 +1,12 @@
+/// <reference lib="webworker" />
+
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 import { RangeRequestsPlugin } from 'workbox-range-requests';
 
-declare const self: ServiceWorkerGlobalScope;
+declare const self: ServiceWorkerGlobalScope & typeof globalThis;
 
 cleanupOutdatedCaches();
 

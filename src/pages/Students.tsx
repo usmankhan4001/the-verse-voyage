@@ -1,15 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   Search, 
   UserPlus, 
   MoreVertical, 
-  Mail, 
-  Phone, 
-  Calendar,
-  AlertCircle,
   CheckCircle,
   XCircle,
-  Clock
+  Users
 } from 'lucide-react';
 import { useAppState } from '../context/AppContext';
 import { formatDateShort } from '../data/store';
@@ -154,15 +150,15 @@ export default function Students() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Full Name</label>
-                <input type="text" fullWidth value={newStudent.name} onChange={e => setNewStudent({...newStudent, name: e.target.value})} placeholder="e.g. Usman Khan" style={{ width: '100%' }} />
+                <input type="text" value={newStudent.name} onChange={e => setNewStudent({...newStudent, name: e.target.value})} placeholder="e.g. Usman Khan" style={{ width: '100%' }} />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Username</label>
-                <input type="text" fullWidth value={newStudent.username} onChange={e => setNewStudent({...newStudent, username: e.target.value})} placeholder="e.g. usmankhan" style={{ width: '100%' }} />
+                <input type="text" value={newStudent.username} onChange={e => setNewStudent({...newStudent, username: e.target.value})} placeholder="e.g. usmankhan" style={{ width: '100%' }} />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Secret Passcode</label>
-                <input type="text" fullWidth value={newStudent.passcode} onChange={e => setNewStudent({...newStudent, passcode: e.target.value})} placeholder="Default: 1234" style={{ width: '100%' }} />
+                <input type="text" value={newStudent.passcode} onChange={e => setNewStudent({...newStudent, passcode: e.target.value})} placeholder="Default: 1234" style={{ width: '100%' }} />
               </div>
             </div>
 

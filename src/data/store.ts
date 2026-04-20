@@ -131,6 +131,10 @@ export function getMastery(state: AppState, studentId: string, surahNum: number,
   };
 }
 
+export function formatDateShort(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 export function isSessionLocked(state: AppState, studentId: string, surahNum: number, sessionIdx: number): boolean {
   if (sessionIdx === 0) return false; // First session is always unlocked
   const prevKey = getSessionKey(surahNum, sessionIdx - 1);
