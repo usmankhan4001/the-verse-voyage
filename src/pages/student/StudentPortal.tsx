@@ -415,11 +415,7 @@ export default function StudentPortal({
                     <motion.div className="sp__sessions" initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }}>
                       {Array.from({ length: surah.sessions }).map((_, idx) => {
                         const sessProg = getProgress(surah.num, idx)!;
-                        let locked = false;
-                        if (idx > 0) {
-                          const prev = getProgress(surah.num, idx - 1);
-                          if (!prev?.completed) locked = true;
-                        }
+                        const locked = idx > 0 && !getProgress(surah.num, idx - 1)?.completed;
                         return (
                           <div key={idx} className={`sp__session-item ${sessProg.completed ? 'sp__session-item--done' : ''} ${locked ? 'sp__session-item--locked' : ''}`}
                                onClick={() => !locked && setViewingSession({ surahNum: surah.num, idx })}>
