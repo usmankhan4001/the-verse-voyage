@@ -50,10 +50,10 @@ export default function Dashboard({ state, completedSessions }: DashboardProps) 
   }) || currentPhaseSurahs[0];
 
   const phaseColors: Record<number, string> = {
-    1: 'var(--primary)',
-    2: 'var(--purple)',
-    3: 'var(--gold)',
-    4: 'var(--coral)',
+    1: 'var(--phase-1)',
+    2: 'var(--phase-2)',
+    3: 'var(--phase-3)',
+    4: 'var(--phase-4)',
   };
 
   const badgeColors: Record<number, 'green' | 'purple' | 'gold' | 'coral'> = {

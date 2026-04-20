@@ -68,7 +68,7 @@ export default function Sessions({ state, completeSession, importSessionsFromCSV
         } else {
           setImportStatus({ type: 'error', msg: 'No valid sessions found in CSV.' });
         }
-      } catch (err) {
+      } catch {
         setImportStatus({ type: 'error', msg: 'Failed to parse CSV. Check format.' });
       }
     };
