@@ -49,7 +49,7 @@ export default function SurahDetail({
     const sess = {
       completed: false,
       contentChecklist: { arabicCard: false, audio: false, wordByWord: false, tafseer: false, posted: false },
-    } as any;
+    } as unknown as SessionStatus;
 
     Object.assign(sess, defaultSess, sessMap);
     
@@ -73,7 +73,7 @@ export default function SurahDetail({
     });
   };
 
-  const updateSessionField = (sessionIdx: number, field: keyof SessionStatus, value: any) => {
+  const updateSessionField = (sessionIdx: number, field: keyof SessionStatus, value: unknown) => {
     updateSessionProgress(surah.num, sessionIdx, { [field]: value });
   };
 

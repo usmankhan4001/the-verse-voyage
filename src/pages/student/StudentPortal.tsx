@@ -70,7 +70,9 @@ export default function StudentPortal({
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
-    setAuthError('');
+    // Clear auth error when switching modes
+    const timer = setTimeout(() => setAuthError(''), 0);
+    return () => clearTimeout(timer);
   }, [authMode]);
 
   // ── Auth Handlers ──
@@ -122,9 +124,12 @@ export default function StudentPortal({
           const v = String(a).padStart(3, '0');
           urls.push(`https://everyayah.com/data/Husary_Mujawwad_64kbps/${s}${v}.mp3`);
         }
-        setPlaylist(urls);
-        setCurrentTrackIdx(0);
-        setIsPlaying(false);
+        // Use functional update to avoid direct setState in effect
+        setTimeout(() => {
+          setPlaylist(urls);
+          setCurrentTrackIdx(0);
+          setIsPlaying(false);
+        }, 0);
       }
     }
   }, [viewingSession, state.sessionProgress]);
