@@ -14,6 +14,7 @@ import Settings from './pages/Settings';
 import UserGuide from './pages/UserGuide';
 import StudentPortal from './pages/student/StudentPortal';
 import { useTheme } from './hooks/useTheme';
+import type { Theme } from './hooks/useTheme';
 import { useAppState } from './hooks/useAppState';
 import './App.css';
 
@@ -27,9 +28,20 @@ const pageTitles: Record<string, string> = {
   '/admin/guide': 'User Guide',
 };
 
-function AppContent() {
-  const location = useLocation();
-  const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
+
+function AppRoutes({
+  location,
+  theme,
+  resolvedTheme,
+  setTheme,
+  toggleTheme
+}: {
+  location: ReturnType<typeof useLocation>;
+  theme: Theme;
+  resolvedTheme: 'light' | 'dark';
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
+}) {
   const {
     state,
     addStudent,
@@ -48,6 +60,120 @@ function AppContent() {
     completedSessions,
   } = useAppState();
 
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Root redirects to student portal */}
+        <Route path="/" element={<Navigate to="/student" replace />} />
+
+        {/* Admin Routes */}
+        <Route
+          path="/admin"
+          element={<Dashboard state={state} completedSessions={completedSessions} />}
+        />
+        <Route path="/admin/surahs" element={<SurahExplorer state={state} />} />
+        <Route
+          path="/admin/surahs/:id"
+          element={
+            <SurahDetail
+              state={state}
+              completeSession={completeSession}
+              updateSessionProgress={updateSessionProgress}
+              setTeacherNote={setTeacherNote}
+            />
+          }
+        />
+        <Route
+          path="/admin/sessions"
+          element={
+            <Sessions
+              state={state}
+              completeSession={completeSession}
+              importSessionsFromCSV={importSessionsFromCSV}
+            />
+          }
+        />
+        <Route
+          path="/admin/students"
+          element={
+            <Students
+              state={state}
+              addStudent={addStudent}
+              removeStudent={removeStudent}
+              markAttendance={markAttendance}
+            />
+          }
+        />
+        <Route
+          path="/admin/quizzes"
+          element={<Quizzes state={state} addQuiz={addQuiz} removeQuiz={removeQuiz} />}
+        />
+        <Route
+          path="/admin/settings"
+          element={
+            <Settings
+              state={state}
+              updateSettings={updateSettings}
+              theme={theme}
+              setTheme={setTheme}
+            />
+          }
+        />
+        <Route path="/admin/guide" element={<UserGuide />} />
+
+        {/* Student Routes */}
+        <Route
+          path="/student"
+          element={
+            <StudentPortal
+              state={state}
+              registerStudent={registerStudent}
+              updateStudentProgress={updateStudentProgress}
+              recordQuizSubmission={recordQuizSubmission}
+              resolvedTheme={resolvedTheme}
+              toggleTheme={toggleTheme}
+            />
+          }
+        />
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
+function AdminGate({ onAuthSuccess }: { onAuthSuccess: () => void }) {
+  return (
+    <div className="admin-gate">
+      <div className="admin-gate__card">
+        <h2>Teacher Access</h2>
+        <p>Please enter the admin passcode to continue</p>
+        <input
+          type="password"
+          placeholder="Passcode"
+          autoFocus
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              const val = (e.target as HTMLInputElement).value;
+              if (val === 'admin123') {
+                localStorage.setItem('vv_admin_auth', 'true');
+                onAuthSuccess();
+              } else {
+                alert('Invalid Passcode');
+              }
+            }
+          }}
+        />
+        <button className="admin-gate__back" onClick={() => window.location.href = '/'}>
+          Back to Student Portal
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AppContent() {
+  const location = useLocation();
+  const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
+
   const [isAdminAuth, setIsAdminAuth] = useState(() => localStorage.getItem('vv_admin_auth') === 'true');
 
   const isStudentArea = !location.pathname.startsWith('/admin');
@@ -55,33 +181,7 @@ function AppContent() {
   
   // Admin Auth Gate
   if (isAdminRoute && !isAdminAuth) {
-    return (
-      <div className="admin-gate">
-        <div className="admin-gate__card">
-          <h2>Teacher Access</h2>
-          <p>Please enter the admin passcode to continue</p>
-          <input 
-            type="password" 
-            placeholder="Passcode" 
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                const val = (e.target as HTMLInputElement).value;
-                if (val === 'admin123') {
-                  setIsAdminAuth(true);
-                  localStorage.setItem('vv_admin_auth', 'true');
-                } else {
-                  alert('Invalid Passcode');
-                }
-              }
-            }}
-          />
-          <button className="admin-gate__back" onClick={() => window.location.href = '/'}>
-            Back to Student Portal
-          </button>
-        </div>
-      </div>
-    );
+    return <AdminGate onAuthSuccess={() => setIsAdminAuth(true)} />;
   }
 
   const pageTitle = pageTitles[location.pathname] || 'The Verse Voyage';
@@ -101,82 +201,13 @@ function AppContent() {
         )}
 
         <main className={`app-content ${isStudentArea ? 'app-content--full' : ''}`}>
-          <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
-              {/* Root redirects to student portal */}
-              <Route path="/" element={<Navigate to="/student" replace />} />
-              
-              {/* Admin Routes */}
-              <Route
-                path="/admin"
-                element={<Dashboard state={state} completedSessions={completedSessions} />}
-              />
-              <Route path="/admin/surahs" element={<SurahExplorer state={state} />} />
-              <Route
-                path="/admin/surahs/:id"
-                element={
-                  <SurahDetail
-                    state={state}
-                    completeSession={completeSession}
-                    updateSessionProgress={updateSessionProgress}
-                    setTeacherNote={setTeacherNote}
-                  />
-                }
-              />
-              <Route
-                path="/admin/sessions"
-                element={
-                  <Sessions 
-                    state={state} 
-                    completeSession={completeSession} 
-                    importSessionsFromCSV={importSessionsFromCSV}
-                  />
-                }
-              />
-              <Route
-                path="/admin/students"
-                element={
-                  <Students
-                    state={state}
-                    addStudent={addStudent}
-                    removeStudent={removeStudent}
-                    markAttendance={markAttendance}
-                  />
-                }
-              />
-              <Route
-                path="/admin/quizzes"
-                element={<Quizzes state={state} addQuiz={addQuiz} removeQuiz={removeQuiz} />}
-              />
-              <Route
-                path="/admin/settings"
-                element={
-                  <Settings
-                    state={state}
-                    updateSettings={updateSettings}
-                    theme={theme}
-                    setTheme={setTheme}
-                  />
-                }
-              />
-              <Route path="/admin/guide" element={<UserGuide />} />
-
-              {/* Student Routes */}
-              <Route
-                path="/student"
-                element={
-                  <StudentPortal
-                    state={state}
-                    registerStudent={registerStudent}
-                    updateStudentProgress={updateStudentProgress}
-                    recordQuizSubmission={recordQuizSubmission}
-                    resolvedTheme={resolvedTheme}
-                    toggleTheme={toggleTheme}
-                  />
-                }
-              />
-            </Routes>
-          </AnimatePresence>
+          <AppRoutes
+            location={location}
+            theme={theme}
+            resolvedTheme={resolvedTheme}
+            setTheme={setTheme}
+            toggleTheme={toggleTheme}
+          />
         </main>
       </div>
 
