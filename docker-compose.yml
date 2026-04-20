@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  verse-voyage:
+    build: .
+    container_name: verse-voyage
+    ports:
+      - "80:80"
+    restart: always
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true
