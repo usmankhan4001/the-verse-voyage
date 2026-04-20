@@ -62,13 +62,14 @@ export default function Sessions({ state, completeSession, importSessionsFromCSV
           };
         }).filter(s => !isNaN(s.surahNum!) && !isNaN(s.sessionIndex!));
 
-        if (importedSessions.length > 0) {
-          importSessionsFromCSV(importedSessions);
-          setImportStatus({ type: 'success', msg: `Successfully imported ${importedSessions.length} sessions.` });
-        } else {
+        if (importedSessions.length === 0) {
           setImportStatus({ type: 'error', msg: 'No valid sessions found in CSV.' });
+          return;
         }
-      } catch (err) {
+
+        importSessionsFromCSV(importedSessions);
+        setImportStatus({ type: 'success', msg: `Successfully imported ${importedSessions.length} sessions.` });
+      } catch {
         setImportStatus({ type: 'error', msg: 'Failed to parse CSV. Check format.' });
       }
     };
