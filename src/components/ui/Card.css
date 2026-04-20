@@ -1,0 +1,40 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition);
+}
+
+.card--pad-none { padding: 0; }
+.card--pad-sm { padding: 12px 14px; }
+.card--pad-md { padding: 18px 20px; }
+.card--pad-lg { padding: 24px 28px; }
+
+.card--glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+}
+
+.card--accent {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.card--interactive:hover,
+.card--clickable:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.card--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.card--clickable:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}

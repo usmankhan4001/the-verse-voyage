@@ -1,0 +1,141 @@
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.settings-page__section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Theme ── */
+.settings-page__theme-options {
+  display: flex;
+  gap: 10px;
+}
+
+.settings-page__theme-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 16px;
+  border-radius: var(--radius);
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  border: 2px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.settings-page__theme-btn:hover {
+  background: var(--surface-active);
+}
+
+.settings-page__theme-btn--active {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* ── Fields ── */
+.settings-page__field {
+  margin-bottom: 16px;
+}
+
+.settings-page__field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.settings-page__field input,
+.settings-page__field select {
+  width: 100%;
+}
+
+/* ── Data ── */
+.settings-page__desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.settings-page__data-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.settings-page__export-btn,
+.settings-page__import-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.settings-page__export-btn {
+  background: var(--primary);
+  color: white;
+}
+
+.settings-page__export-btn:hover {
+  background: var(--primary-hover);
+}
+
+.settings-page__import-btn {
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-strong);
+}
+
+.settings-page__import-btn:hover {
+  background: var(--surface-active);
+}
+
+.settings-page__import-status {
+  font-size: 12px;
+  color: var(--success);
+  margin-top: 12px;
+}
+
+/* ── About ── */
+.settings-page__about {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.settings-page__about strong {
+  color: var(--text);
+}
+
+.settings-page__about-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .settings-page__theme-options {
+    flex-direction: column;
+  }
+  .settings-page__data-actions {
+    flex-direction: column;
+  }
+}

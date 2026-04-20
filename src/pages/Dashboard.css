@@ -1,0 +1,235 @@
+.dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 0 10px 40px;
+}
+
+/* ── Hero ── */
+.dashboard__hero {
+  background: var(--primary);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.dashboard__hero::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 40%;
+  background: linear-gradient(to left, rgba(255,255,255,0.05), transparent);
+  pointer-events: none;
+}
+
+.dashboard__hero-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard__greeting {
+  margin: 0 0 4px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+}
+
+.dashboard__title {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0 0 4px;
+  color: white;
+  letter-spacing: -0.02em;
+}
+
+.dashboard__subtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+/* ── Metrics ── */
+.dashboard__metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .dashboard__metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Grid ── */
+.dashboard__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 700px) {
+  .dashboard__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Section Header ── */
+.dashboard__section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+
+/* ── Next Session ── */
+.dashboard__next-surah {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.dashboard__next-surah-num {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--gold);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.dashboard__next-surah-info h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.dashboard__next-surah-info p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.dashboard__action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--primary);
+  color: white;
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  transition: var(--transition);
+  width: 100%;
+  justify-content: center;
+}
+
+.dashboard__action-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+
+/* ── Quick Actions ── */
+.dashboard__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.dashboard__quick-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 12px;
+  border-radius: var(--radius);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.dashboard__quick-btn:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* ── Phases ── */
+.dashboard__phases {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dashboard__phase-row {
+  padding: 16px;
+  border-radius: var(--radius);
+  background: var(--bg);
+  border: 1px solid transparent;
+  transition: var(--transition);
+}
+
+.dashboard__phase-row--active {
+  background: var(--surface-hover);
+  border-color: var(--border);
+}
+
+.dashboard__phase-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.dashboard__phase-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.dashboard__phase-count {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.dashboard__phase-bar-wrap {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dashboard__phase-bar {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--primary);
+  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}

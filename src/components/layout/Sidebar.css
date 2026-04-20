@@ -1,0 +1,119 @@
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--border);
+  padding: 24px 16px;
+  z-index: 50;
+  overflow-y: auto;
+  flex-shrink: 0;
+  transition: background var(--transition);
+}
+
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
+.sidebar__logo-img {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  object-fit: cover;
+}
+
+.sidebar__brand-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+}
+
+.sidebar__brand-sub {
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.sidebar__link:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.sidebar__link--active {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.sidebar__link--guide {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar__footer {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+.sidebar__theme-toggle,
+.sidebar__exit-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.sidebar__theme-toggle:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.sidebar__exit-btn {
+  color: var(--error);
+}
+
+.sidebar__exit-btn:hover {
+  background: var(--bg);
+  opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+}

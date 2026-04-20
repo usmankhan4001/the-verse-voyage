@@ -1,0 +1,246 @@
+.students-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.students-page__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.students-page__add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--primary);
+  color: white;
+  transition: all var(--transition-fast);
+}
+
+.students-page__add-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+/* ── Add Form ── */
+.students-page__add-form {
+  animation: slideDown var(--transition) both;
+}
+
+.students-page__add-form input {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.students-page__add-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.students-page__save-btn {
+  padding: 8px 20px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--primary);
+  color: white;
+  transition: background var(--transition-fast);
+}
+
+.students-page__save-btn:hover { background: var(--primary-hover); }
+
+.students-page__cancel-btn {
+  padding: 8px 20px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+}
+
+/* ── Table ── */
+.students-page__grid-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.students-page__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.students-page__table th,
+.students-page__table td {
+  padding: 10px 12px;
+  text-align: center;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.students-page__table thead th {
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  background: var(--surface-hover);
+  position: sticky;
+  top: 0;
+}
+
+.students-page__th-name {
+  text-align: left !important;
+  min-width: 140px;
+}
+
+.students-page__td-name {
+  text-align: left !important;
+  font-weight: 500;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.students-page__risk-flag {
+  color: var(--coral);
+  display: flex;
+}
+
+.students-page__row--risk {
+  background: var(--coral-light);
+}
+
+.students-page__td-streak {
+  min-width: 60px;
+}
+
+.students-page__no-streak {
+  color: var(--text-muted);
+}
+
+.students-page__td-att {
+  min-width: 50px;
+}
+
+.students-page__att-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.students-page__att-btn:hover {
+  transform: scale(1.1);
+}
+
+.students-page__att-btn--present {
+  background: var(--success-light);
+  border-color: var(--success);
+}
+
+.students-page__att-btn--absent {
+  background: var(--error-light);
+  border-color: var(--error);
+}
+
+.students-page__delete-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.students-page__delete-btn:hover {
+  color: var(--error);
+  background: var(--error-light);
+}
+
+/* ── Section title ── */
+.students-page__section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Leaderboard ── */
+.students-page__leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.students-page__lb-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  transition: background var(--transition-fast);
+}
+
+.students-page__lb-row:hover {
+  background: var(--surface-hover);
+}
+
+.students-page__lb-rank {
+  width: 28px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.students-page__lb-rank--top {
+  font-size: 18px;
+}
+
+.students-page__lb-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* ── Empty ── */
+.students-page__empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.students-page__empty h3 {
+  font-size: 16px;
+  color: var(--text);
+  margin: 0;
+}
+
+.students-page__empty p {
+  font-size: 13px;
+  margin: 0;
+}
