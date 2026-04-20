@@ -1,17 +1,15 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Search, 
   UserPlus, 
   MoreVertical, 
   CheckCircle,
-  XCircle,
-  Users
+  XCircle
 } from 'lucide-react';
 import { useAppState } from '../context/AppContext';
 import { formatDateShort } from '../data/store';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import Badge from '../components/ui/Badge';
 
 export default function Students() {
   const { state, dispatch } = useAppState();
@@ -38,41 +36,41 @@ export default function Students() {
   };
 
   return (
-    <div className="students-page animate-fade-in">
+    <div className="animate-slide-up">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h2 style={{ fontSize: '24px', fontWeight: 700 }}>Student Management</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>Track attendance and mastery progress.</p>
+          <h2 style={{ fontSize: '24px', fontWeight: 700 }}>Student Directory</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>Manage enrollments and daily attendance tracking.</p>
         </div>
         <Button icon={<UserPlus size={18} />} onClick={() => setShowAddModal(true)}>Add Student</Button>
       </div>
 
       <Card padding="none">
-        <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-elevated)' }}>
           <div style={{ position: 'relative', width: '320px' }}>
-            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
               type="text" 
-              placeholder="Filter by name or username..." 
+              className="admin-gate__input"
+              placeholder="Search by name or username..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ width: '100%', padding: '10px 12px 10px 40px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--bg)' }}
+              style={{ width: '100%', padding: '10px 12px 10px 42px', fontSize: '14px', margin: 0, textAlign: 'left', letterSpacing: 'normal' }}
             />
           </div>
-          <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-            Showing {filteredStudents.length} students
+          <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>
+            {filteredStudents.length} Students Listed
           </div>
         </div>
 
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
-                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Student</th>
-                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Username</th>
-                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Today's Attendance</th>
-                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Status</th>
-                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Actions</th>
+                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'left' }}>Student</th>
+                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'left' }}>Credentials</th>
+                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'left' }}>Daily Tracking</th>
+                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -80,85 +78,83 @@ export default function Students() {
                 const today = new Date().toISOString().split('T')[0];
                 const attStatus = state.attendance[student.id]?.[today];
                 
-                // At-Risk? (3 consecutive absences)
-                const history = Object.values(state.attendance[student.id] || {}).slice(-3);
-                const isAtRisk = history.length >= 3 && history.every(h => h === 'absent');
-
                 return (
-                  <tr key={student.id} style={{ borderBottom: '1px solid var(--border)', transition: 'var(--transition)' }} className="hover-bg">
+                  <tr key={student.id} style={{ borderBottom: '1px solid var(--border)', transition: 'var(--transition)' }}>
                     <td style={{ padding: '16px 24px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
                           {student.name[0]}
                         </div>
                         <div>
                           <div style={{ fontWeight: 600, fontSize: '14px' }}>{student.name}</div>
-                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Joined {formatDateShort(student.joinedAt)}</div>
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Registered {formatDateShort(student.joinedAt)}</div>
                         </div>
                       </div>
                     </td>
-                    <td style={{ padding: '16px 24px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                      @{student.username}
+                    <td style={{ padding: '16px 24px' }}>
+                       <div style={{ fontSize: '13px', fontWeight: 500 }}>@{student.username}</div>
+                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Pass: {student.passcode}</div>
                     </td>
                     <td style={{ padding: '16px 24px' }}>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '12px' }}>
                         <button 
                           onClick={() => markAttendance(student.id, 'present')}
-                          style={{ padding: '6px', borderRadius: '6px', background: attStatus === 'present' ? 'var(--success)' : 'var(--bg)', color: attStatus === 'present' ? 'white' : 'var(--text-muted)', border: '1px solid var(--border)' }}
+                          style={{ 
+                            display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer',
+                            background: attStatus === 'present' ? 'var(--success)' : 'var(--bg)', 
+                            color: attStatus === 'present' ? 'white' : 'var(--text-muted)', 
+                            border: attStatus === 'present' ? '1px solid var(--success)' : '1px solid var(--border)',
+                            fontSize: '12px', fontWeight: 600, transition: 'var(--transition)'
+                          }}
                         >
-                          <CheckCircle size={18} />
+                          <CheckCircle size={16} /> Present
                         </button>
                         <button 
                           onClick={() => markAttendance(student.id, 'absent')}
-                          style={{ padding: '6px', borderRadius: '6px', background: attStatus === 'absent' ? 'var(--error)' : 'var(--bg)', color: attStatus === 'absent' ? 'white' : 'var(--text-muted)', border: '1px solid var(--border)' }}
+                          style={{ 
+                            display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer',
+                            background: attStatus === 'absent' ? 'var(--error)' : 'var(--bg)', 
+                            color: attStatus === 'absent' ? 'white' : 'var(--text-muted)', 
+                            border: attStatus === 'absent' ? '1px solid var(--error)' : '1px solid var(--border)',
+                            fontSize: '12px', fontWeight: 600, transition: 'var(--transition)'
+                          }}
                         >
-                          <XCircle size={18} />
+                          <XCircle size={16} /> Absent
                         </button>
                       </div>
                     </td>
-                    <td style={{ padding: '16px 24px' }}>
-                      {isAtRisk ? (
-                        <Badge label="At Risk" variant="danger" dot />
-                      ) : (
-                        <Badge label="Active" variant="success" dot />
-                      )}
-                    </td>
-                    <td style={{ padding: '16px 24px' }}>
-                      <button className="sp__icon-btn"><MoreVertical size={18} /></button>
+                    <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                      <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                        <MoreVertical size={18} />
+                      </button>
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-          {filteredStudents.length === 0 && (
-            <div style={{ padding: '80px', textAlign: 'center' }}>
-              <div style={{ marginBottom: '16px', color: 'var(--text-muted)' }}><Users size={48} strokeWidth={1} /></div>
-              <h3 style={{ fontSize: '16px', fontWeight: 600 }}>No students found</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Try a different search term or add a new student.</p>
-            </div>
-          )}
         </div>
       </Card>
 
-      {/* Add Student Modal */}
+      {/* Add Student Modal Overlay */}
       {showAddModal && (
-        <div className="admin-gate" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
-          <form className="card glass animate-slide-up" style={{ width: '400px', padding: '32px' }} onSubmit={handleAddStudent}>
-            <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '24px' }}>Register New Student</h3>
+        <div className="admin-gate" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)' }}>
+          <form className="card glass animate-slide-up" style={{ width: '420px', padding: '32px' }} onSubmit={handleAddStudent}>
+            <h3 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>Register Traveler</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '32px' }}>Create an identity for the new student.</p>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '32px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Full Name</label>
-                <input type="text" value={newStudent.name} onChange={e => setNewStudent({...newStudent, name: e.target.value})} placeholder="e.g. Usman Khan" style={{ width: '100%' }} />
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>FULL NAME</label>
+                <input type="text" className="admin-gate__input" value={newStudent.name} onChange={e => setNewStudent({...newStudent, name: e.target.value})} placeholder="e.g. Usman Khan" style={{ width: '100%', margin: 0, textAlign: 'left', padding: '12px', fontSize: '15px' }} />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Username</label>
-                <input type="text" value={newStudent.username} onChange={e => setNewStudent({...newStudent, username: e.target.value})} placeholder="e.g. usmankhan" style={{ width: '100%' }} />
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>USERNAME</label>
+                <input type="text" className="admin-gate__input" value={newStudent.username} onChange={e => setNewStudent({...newStudent, username: e.target.value})} placeholder="e.g. usmankhan" style={{ width: '100%', margin: 0, textAlign: 'left', padding: '12px', fontSize: '15px' }} />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Secret Passcode</label>
-                <input type="text" value={newStudent.passcode} onChange={e => setNewStudent({...newStudent, passcode: e.target.value})} placeholder="Default: 1234" style={{ width: '100%' }} />
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>SECRET PASSCODE</label>
+                <input type="text" className="admin-gate__input" value={newStudent.passcode} onChange={e => setNewStudent({...newStudent, passcode: e.target.value})} placeholder="Default: 1234" style={{ width: '100%', margin: 0, textAlign: 'left', padding: '12px', fontSize: '15px' }} />
               </div>
             </div>
 

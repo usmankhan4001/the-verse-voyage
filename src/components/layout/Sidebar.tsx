@@ -10,11 +10,10 @@ import {
 } from 'lucide-react';
 import { useAppState } from '../../context/AppContext';
 
-const navItems = [
-  { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/admin/students', icon: Users, label: 'Students' },
-  { to: '/admin/sessions', icon: CalendarCheck, label: 'Sessions' },
-  { to: '/admin/settings', icon: Settings, label: 'Settings' },
+const menuItems = [
+  { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/admin/dashboard' },
+  { id: 'students', label: 'Students', icon: <Users size={20} />, path: '/admin/students' },
+  { id: 'sessions', label: 'Curriculum', icon: <CalendarCheck size={20} />, path: '/admin/sessions' },
 ];
 
 export default function Sidebar() {
@@ -23,63 +22,92 @@ export default function Sidebar() {
 
   const toggleTheme = () => {
     const next = state.settings.theme === 'dark' ? 'light' : 'dark';
-    dispatch({ type: 'SET_THEME', payload: next });
+    dispatch({ type: 'UPDATE_SETTINGS', payload: { theme: next } });
   };
 
   const handleLogout = () => {
-    if (confirm('Logout from Teacher Portal?')) {
-      localStorage.removeItem('vv_admin_auth');
-      window.location.href = '/';
+    if (confirm('Disconnect from Admin Console?')) {
+       localStorage.removeItem('vv_admin_auth');
+       window.location.href = '/';
     }
   };
 
   return (
-    <aside className="sidebar glass" style={{ width: 'var(--sidebar-width)', height: '100vh', padding: '24px', borderRight: '1px solid var(--border-strong)', display: 'flex', flexDirection: 'column' }}>
-      <div className="sidebar__brand" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '40px', padding: '0 8px' }}>
-        <img src="/logo.png" alt="Logo" style={{ width: '32px', height: '32px' }} />
-        <div style={{ lineHeight: 1.1 }}>
-          <div style={{ fontWeight: 700, fontSize: '18px' }}>Verse Voyage</div>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Teacher Admin</div>
+    <aside className="app-sidebar">
+      <div style={{ padding: '32px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ width: '40px', height: '40px', background: 'var(--primary)', color: 'white', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '20px' }}>
+           V
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text)' }}>Verse Voyage</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Teacher Portal</div>
         </div>
       </div>
 
-      <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        {navItems.map(item => (
+      <nav style={{ flex: 1, padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        {menuItems.map((item) => (
           <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === '/admin'}
-            className={({ isActive }) => `sidebar__link ${isActive ? 'active' : ''}`}
+            key={item.id}
+            to={item.path}
             style={({ isActive }) => ({
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
               padding: '12px 16px',
               borderRadius: 'var(--radius)',
+              textDecoration: 'none',
+              fontSize: '14px',
+              fontWeight: 500,
+              transition: 'var(--transition)',
               color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
               background: isActive ? 'var(--primary-light)' : 'transparent',
-              fontWeight: isActive ? 600 : 400,
-              transition: 'var(--transition)'
+              border: isActive ? '1px solid var(--primary-glow)' : '1px solid transparent'
             })}
           >
-            <item.icon size={20} />
+            {item.icon}
             <span>{item.label}</span>
           </NavLink>
         ))}
       </nav>
 
-      <div className="sidebar__footer" style={{ marginTop: 'auto', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <button 
+      <div style={{ padding: '24px 16px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <button
           onClick={toggleTheme}
-          style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: 'var(--radius)', color: 'var(--text-secondary)', width: '100%', textAlign: 'left' }}
+          style={{ 
+            display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', width: '100%',
+            background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+            cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 500
+          }}
         >
           {state.settings.theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           <span>{state.settings.theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
         </button>
-        
-        <button 
+
+        <NavLink
+            to="/admin/settings"
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '10px 16px',
+              borderRadius: 'var(--radius)',
+              textDecoration: 'none',
+              fontSize: '13px',
+              fontWeight: 500,
+              color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
+            })}
+          >
+            <Settings size={18} />
+            <span>Settings</span>
+        </NavLink>
+
+        <button
           onClick={handleLogout}
-          style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: 'var(--radius)', color: 'var(--error)', width: '100%', textAlign: 'left' }}
+          style={{ 
+            display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', width: '100%',
+            background: 'none', border: 'none', cursor: 'pointer', color: 'var(--error)', 
+            fontSize: '13px', fontWeight: 500
+          }}
         >
           <LogOut size={18} />
           <span>Logout</span>

@@ -1,100 +1,63 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap');
 
 :root {
-  /* ── The Verse Voyage — Unified Premium Palette ── */
-  --primary: #1E3A8A; /* Sophisticated Deep Navy */
+  /* ── Design Tokens ── */
+  --primary: #1E3A8A;
   --primary-hover: #1E40AF;
-  --primary-glow: rgba(30, 58, 138, 0.1);
+  --primary-glow: rgba(30, 58, 138, 0.15);
   --primary-light: rgba(30, 58, 138, 0.05);
 
-  --accent: #B5935B; /* Premium Gold */
-  --accent-light: #FAF3E6;
+  --accent: #B5935B; /* Gold */
+  --accent-glow: rgba(181, 147, 91, 0.2);
+  
+  --success: #10B981;
+  --error: #EF4444;
+  --warning: #F59E0B;
   
   --bg: #F8FAFC;
   --bg-elevated: #FFFFFF;
   --surface: #FFFFFF;
-  --surface-hover: #F1F5F9;
-  
   --text: #0F172A;
   --text-secondary: #475569;
   --text-muted: #94A3B8;
-  --text-inverse: #FFFFFF;
-
+  
   --border: rgba(15, 23, 42, 0.08);
   --border-strong: rgba(15, 23, 42, 0.15);
 
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
   --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-
-  --radius-sm: 4px;
-  --radius: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-arabic: 'Amiri', serif;
-  --font-urdu: 'Noto Nastaliq Urdu', serif;
-
-  --header-height: 64px;
-  --bottom-nav-height: 72px;
+  --header-height: 72px;
   --sidebar-width: 260px;
-
+  
   --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-
-  color-scheme: light;
 }
 
 [data-theme="dark"] {
-  --bg: #0B0E14; /* Deep Obsidian */
+  --bg: #0B0E14;
   --bg-elevated: #111827;
   --surface: #1F2937;
-  --surface-hover: #374151;
-  
   --text: #F9FAFB;
   --text-secondary: #9CA3AF;
   --text-muted: #6B7280;
-
-  --border: rgba(255, 255, 255, 0.05);
-  --border-strong: rgba(255, 255, 255, 0.15);
-
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4);
-
-  color-scheme: dark;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* ── Base Styles ── */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: var(--font-sans);
-  background: var(--bg);
-  color: var(--text);
-  overflow-x: hidden;
+/* ── Base ── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { 
+  font-family: 'Inter', sans-serif; 
+  background: var(--bg); 
+  color: var(--text); 
   -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
 }
 
-/* ── Typography Enhancements ── */
-.arabic {
-  font-family: var(--font-arabic);
-  direction: rtl;
-  font-size: 1.5rem;
-  line-height: 2.2;
-}
-
-.urdu {
-  font-family: var(--font-urdu);
-  direction: rtl;
-  font-size: 1.25rem;
-  line-height: 2.4;
-}
-
-/* ── Layout ── */
+/* ── Layout Shell ── */
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -102,97 +65,97 @@ body {
 }
 
 .app-container {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - 0px); /* Adjust if you have a top bar */
+}
+
+.app-sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--bg-elevated);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  transition: width var(--transition);
+}
+
+.app-main {
   flex: 1;
   display: flex;
+  flex-direction: column;
+  min-width: 0; /* Prevents flex items from overflowing */
+  background: var(--bg);
 }
 
-/* ── Components (Shared) ── */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 20px;
-  border-radius: var(--radius-lg);
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition);
-  border: 1px solid transparent;
-  font-size: 0.95rem;
+.app-content {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
 }
 
-.btn-primary {
-  background: var(--primary);
-  color: white;
-}
+/* ── Typography ── */
+.arabic { font-family: 'Amiri', serif; direction: rtl; line-height: 2; font-size: 1.8rem; }
+h1, h2, h3 { color: var(--text); font-weight: 700; letter-spacing: -0.02em; }
 
-.btn-primary:hover {
-  background: var(--primary-hover);
-  transform: translateY(-1px);
+/* ── Utility Components ── */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
-
-.btn-outline {
-  border-color: var(--border-strong);
-  background: transparent;
-  color: var(--text);
-}
-
-.btn-outline:hover {
-  background: var(--surface-hover);
+[data-theme="dark"] .glass {
+  background: rgba(17, 24, 39, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .card {
   background: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius);
   box-shadow: var(--shadow);
-}
-
-.glass {
-  background: rgba(var(--bg-elevated), 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border-strong);
-}
-
-/* ── Admin Gate (Global) ── */
-.admin-gate {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg);
   padding: 24px;
-}
-
-.admin-gate__card {
-  width: 100%;
-  max-width: 400px;
-  padding: 48px;
-  border-radius: var(--radius-xl);
-  text-align: center;
-}
-
-.admin-gate__card h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
-.admin-gate__card p { color: var(--text-secondary); margin-bottom: 32px; font-size: 0.95rem; }
-
-.admin-gate__input {
-  width: 100%;
-  padding: 16px;
-  font-size: 28px;
-  text-align: center;
-  letter-spacing: 0.15em;
-  background: var(--bg);
-  border: 2px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  margin-bottom: 24px;
   transition: var(--transition);
 }
 
-.admin-gate__input:focus {
-  border-color: var(--primary);
-  outline: none;
-  box-shadow: 0 0 0 4px var(--primary-glow);
+/* ── Student Portal Specifics ── */
+.portal-layout {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
 }
+
+.mastery-hud {
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.surah-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.surah-card:hover { transform: translateX(4px); border-color: var(--primary); }
+.surah-card__locked { opacity: 0.6; cursor: not-allowed; border-style: dashed; }
+
+/* ── Animations ── */
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-slide-up { animation: slideUp 0.4s ease-out forwards; }

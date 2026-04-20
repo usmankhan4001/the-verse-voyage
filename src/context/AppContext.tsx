@@ -22,6 +22,7 @@ type Action =
   | { type: 'MARK_ATTENDANCE'; payload: { studentId: string; date: string; status: any } }
   | { type: 'IMPORT_CURRICULUM'; payload: SessionDefinition[] }
   | { type: 'UPDATE_SESSION'; payload: { key: string; updates: Partial<SessionDefinition> } }
+  | { type: 'UPDATE_SETTINGS'; payload: Partial<AppState['settings']> }
   | { type: 'SET_ADMIN_AUTH'; payload: boolean };
 
 interface AppContextType {
@@ -113,6 +114,16 @@ function appReducer(state: AppState, action: Action): AppState {
             ...state.curriculum[action.payload.key],
             ...action.payload.updates
           }
+        }
+      };
+    }
+
+    case 'UPDATE_SETTINGS': {
+      return {
+        ...state,
+        settings: {
+          ...state.settings,
+          ...action.payload
         }
       };
     }

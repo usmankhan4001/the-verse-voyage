@@ -6,6 +6,7 @@ interface CardProps {
   padding?: 'none' | 'sm' | 'md' | 'lg';
   className?: string;
   onClick?: () => void;
+  style?: React.CSSProperties;
 }
 
 export default function Card({
@@ -13,7 +14,8 @@ export default function Card({
   variant = 'default',
   padding = 'md',
   className = '',
-  onClick
+  onClick,
+  style
 }: CardProps) {
   const variantClass = variant === 'glass' ? 'glass' : 'card';
   const paddingClass = padding !== 'none' ? `p-${padding}` : '';
@@ -23,6 +25,7 @@ export default function Card({
     <div 
       className={`${variantClass} ${paddingClass} ${interactiveClass} ${className}`}
       onClick={onClick}
+      style={style}
     >
       {children}
     </div>

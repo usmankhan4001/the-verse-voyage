@@ -32,6 +32,9 @@ const AdminGate = ({ children }: { children: React.ReactNode }) => {
     return (
       <div className="admin-gate">
         <div className="admin-gate__card card glass animate-slide-up">
+          <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: '24px' }}>
+             🔒
+          </div>
           <h2>Teacher Access</h2>
           <p>Please enter the admin passcode to continue</p>
           <form onSubmit={handleLogin}>
@@ -40,13 +43,14 @@ const AdminGate = ({ children }: { children: React.ReactNode }) => {
               className="admin-gate__input"
               value={passcode}
               onChange={(e) => { setPasscode(e.target.value); setError(false); }}
+              placeholder="••••"
               autoFocus
             />
-            {error && <div style={{ color: 'var(--error)', marginBottom: '16px' }}>Invalid Passcode</div>}
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginBottom: '16px' }}>
+            {error && <div style={{ color: 'var(--error)', marginBottom: '16px', fontSize: '14px', fontWeight: 500 }}>Invalid Passcode</div>}
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginBottom: '16px', height: '48px' }}>
               Verify Identity
             </button>
-            <button type="button" className="admin-gate__back" onClick={() => window.location.href = '/'}>
+            <button type="button" style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '14px' }} onClick={() => window.location.href = '/'}>
               Return to Student Portal
             </button>
           </form>
@@ -68,24 +72,29 @@ function AppContent() {
       {isAdminArea ? (
         <div className="app-container">
           <Sidebar />
-          <div className="app-main" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div className="app-main">
             <Header />
-            <main style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
-              <Routes>
-                <Route path="/admin" element={<AdminGate><AdminDashboard /></AdminGate>} />
-                <Route path="/admin/students" element={<AdminGate><AdminStudents /></AdminGate>} />
-                <Route path="/admin/sessions" element={<AdminGate><AdminSessions /></AdminGate>} />
-                <Route path="/admin/settings" element={<AdminGate><Settings /></AdminGate>} />
-              </Routes>
+            <main className="app-content">
+              <AdminGate>
+                <Routes>
+                  <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  <Route path="/admin/students" element={<AdminStudents />} />
+                  <Route path="/admin/sessions" element={<AdminSessions />} />
+                  <Route path="/admin/settings" element={<Settings />} />
+                </Routes>
+              </AdminGate>
             </main>
           </div>
         </div>
       ) : (
-        <Routes>
-          <Route path="/student" element={<StudentPortal />} />
-          <Route path="/" element={<Navigate to="/student" replace />} />
-          <Route path="*" element={<Navigate to="/student" replace />} />
-        </Routes>
+        <main className="app-shell--student">
+          <Routes>
+            <Route path="/student" element={<StudentPortal />} />
+            <Route path="/" element={<Navigate to="/student" replace />} />
+            <Route path="*" element={<Navigate to="/student" replace />} />
+          </Routes>
+        </main>
       )}
     </div>
   );
