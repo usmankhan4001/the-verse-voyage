@@ -1,28 +1,24 @@
-import './Badge.css';
+import React from 'react';
 
 interface BadgeProps {
-  children: React.ReactNode;
-  color?: 'green' | 'gold' | 'purple' | 'coral' | 'blue' | 'muted';
-  size?: 'sm' | 'md';
+  label: string;
+  variant?: 'primary' | 'success' | 'danger' | 'warning' | 'gold' | 'muted';
+  dot?: boolean;
+  className?: string;
 }
 
-const colorMap = {
-  green: { bg: 'var(--success-light)', text: 'var(--primary)' },
-  gold: { bg: 'var(--gold-light)', text: 'var(--gold-text)' },
-  purple: { bg: 'var(--purple-light)', text: 'var(--purple-text)' },
-  coral: { bg: 'var(--coral-light)', text: 'var(--coral-text)' },
-  blue: { bg: 'var(--blue-light)', text: 'var(--blue-text)' },
-  muted: { bg: 'var(--surface-hover)', text: 'var(--text-secondary)' },
-};
-
-export default function Badge({ children, color = 'green', size = 'sm' }: BadgeProps) {
-  const c = colorMap[color];
+export default function Badge({
+  label,
+  variant = 'muted',
+  dot,
+  className = ''
+}: BadgeProps) {
+  const variantClass = `badge--${variant}`;
+  
   return (
-    <span
-      className={`badge badge--${size}`}
-      style={{ background: c.bg, color: c.text }}
-    >
-      {children}
+    <span className={`badge ${variantClass} ${className}`}>
+      {dot && <span className="badge__dot" />}
+      {label}
     </span>
   );
 }

@@ -1,225 +1,133 @@
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import {
-  BookOpen,
-  Users,
-  CalendarCheck,
-  Trophy,
-  ArrowRight,
-  Zap,
-  Target,
-  TrendingUp,
+import React from 'react';
+import { 
+  Users, 
+  BookOpen, 
+  Calendar, 
+  TrendingUp, 
+  AlertTriangle,
+  ChevronRight,
+  Plus
 } from 'lucide-react';
+import { useAppState } from '../context/AppContext';
+import { surahs, getTotalSessions } from '../data/surahs';
 import Card from '../components/ui/Card';
-import MetricTile from '../components/ui/MetricTile';
-import ProgressRing from '../components/ui/ProgressRing';
+import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import { surahs, phaseInfo, getSurahsByPhase, getTotalSessions } from '../data/surahs';
-import type { AppState } from '../data/store';
-import './Dashboard.css';
+import ProgressBar from '../components/ui/ProgressBar';
 
-interface DashboardProps {
-  state: AppState;
-  completedSessions: number;
-}
+export default function AdminDashboard() {
+  const { state } = useAppState();
 
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.06 } },
-};
-const item = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35 } },
-};
+  // ── Stats Calculation ──
+  const totalStudents = state.students.length;
+  const totalSessionsCount = getTotalSessions();
+  
+  // Total Mastery Calculation
+  let totalMastered = 0;
+  Object.values(state.mastery).forEach(studentMastery => {
+    Object.values(studentMastery).forEach(m => {
+      if (m.mastered) totalMastered++;
+    });
+  });
+  const avgMastery = totalStudents > 0 
+    ? Math.round((totalMastered / (totalStudents * totalSessionsCount)) * 100) 
+    : 0;
 
-export default function Dashboard({ state, completedSessions }: DashboardProps) {
-  const navigate = useNavigate();
-  const totalSessions = getTotalSessions();
-  const progressPct = totalSessions > 0 ? Math.round((completedSessions / totalSessions) * 100) : 0;
-  const currentPhase = state.settings.currentPhase;
-  const currentPhaseSurahs = getSurahsByPhase(currentPhase);
-  const phaseData = phaseInfo.find(p => p.phase === currentPhase)!;
+  // At-Risk Calculation
+  const atRiskCount = state.students.filter(s => {
+    const attendance = state.attendance[s.id] || {};
+    const records = Object.values(attendance).slice(-3);
+    return records.length >= 3 && records.every(r => r === 'absent');
+  }).length;
 
-  // Find the next incomplete surah in current phase
-  const nextSurah = currentPhaseSurahs.find(s => {
-    for (let i = 0; i < s.sessions; i++) {
-      const key = `${s.num}-${i}`;
-      if (!state.sessionProgress[key]?.completed) return true;
-    }
-    return false;
-  }) || currentPhaseSurahs[0];
-
-  const phaseColors: Record<number, string> = {
-    1: 'var(--primary)',
-    2: 'var(--purple)',
-    3: 'var(--gold)',
-    4: 'var(--coral)',
-  };
-
-  const badgeColors: Record<number, 'green' | 'purple' | 'gold' | 'coral'> = {
-    1: 'green',
-    2: 'purple',
-    3: 'gold',
-    4: 'coral',
-  };
+  const stats = [
+    { label: 'Total Students', value: totalStudents, icon: Users, color: 'var(--primary)' },
+    { label: 'Avg. Mastery', value: `${avgMastery}%`, icon: TrendingUp, color: 'var(--success)' },
+    { label: 'Active Sessions', value: Object.keys(state.curriculum).length, icon: BookOpen, color: 'var(--accent)' },
+    { label: 'At-Risk Students', value: atRiskCount, icon: AlertTriangle, color: 'var(--error)' },
+  ];
 
   return (
-    <motion.div className="dashboard" variants={container} initial="hidden" animate="show">
-      {/* Hero Section */}
-      <motion.div className="dashboard__hero" variants={item}>
-        <div className="dashboard__hero-content">
-          <div className="dashboard__hero-text">
-            <h1 className="dashboard__greeting">
-              <span className="arabic" style={{ fontSize: '22px', color: 'var(--gold)' }}>بِسْمِ اللَّهِ</span>
-            </h1>
-            <h2 className="dashboard__title">The Verse Voyage</h2>
-            <p className="dashboard__subtitle">
-              {phaseData.label} · {phaseData.name} · Month {phaseData.months}
-            </p>
-          </div>
-          <ProgressRing
-            value={progressPct}
-            size={110}
-            strokeWidth={7}
-            color={phaseColors[currentPhase]}
-            label={`${progressPct}%`}
-            sublabel="Complete"
-          />
+    <div className="admin-dashboard animate-fade-in">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+        <div>
+          <h2 style={{ fontSize: '24px', fontWeight: 700 }}>Overview</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>Welcome back to your teacher console.</p>
         </div>
-      </motion.div>
-
-      {/* Metrics Grid */}
-      <motion.div className="dashboard__metrics" variants={item}>
-        <MetricTile
-          value={surahs.length}
-          label="Total Surahs"
-          icon={<BookOpen size={18} />}
-          color="var(--primary)"
-        />
-        <MetricTile
-          value={completedSessions}
-          label="Sessions Done"
-          icon={<CalendarCheck size={18} />}
-          color="var(--purple)"
-        />
-        <MetricTile
-          value={state.students.length}
-          label="Students"
-          icon={<Users size={18} />}
-          color="var(--blue)"
-        />
-        <MetricTile
-          value={state.quizzes.length}
-          label="Quizzes Created"
-          icon={<Trophy size={18} />}
-          color="var(--gold)"
-        />
-      </motion.div>
-
-      {/* Quick Actions + Current Surah */}
-      <div className="dashboard__grid">
-        {/* Next Session Card */}
-        <motion.div variants={item}>
-          <Card className="dashboard__next-session" variant="default" padding="lg">
-            <div className="dashboard__section-header">
-              <Zap size={16} style={{ color: 'var(--gold)' }} />
-              <span>Next Session</span>
-            </div>
-            <div className="dashboard__next-surah">
-              <div className="dashboard__next-surah-num arabic">{nextSurah.arabic}</div>
-              <div className="dashboard__next-surah-info">
-                <h3>Surah {nextSurah.name}</h3>
-                <p>{nextSurah.ayaat} ayaat · {nextSurah.sessions} sessions</p>
-                <p className="dashboard__next-themes">{nextSurah.themes}</p>
-              </div>
-            </div>
-            <button
-              className="dashboard__action-btn"
-              onClick={() => navigate(`/admin/surahs/${nextSurah.num}`)}
-            >
-              Open Surah <ArrowRight size={14} />
-            </button>
-          </Card>
-        </motion.div>
-
-        {/* Quick Actions */}
-        <motion.div variants={item}>
-          <Card padding="lg">
-            <div className="dashboard__section-header">
-              <Target size={16} style={{ color: 'var(--primary)' }} />
-              <span>Quick Actions</span>
-            </div>
-            <div className="dashboard__actions">
-              <button className="dashboard__quick-btn" onClick={() => navigate('/admin/surahs')}>
-                <BookOpen size={18} />
-                <span>Browse Surahs</span>
-              </button>
-              <button className="dashboard__quick-btn" onClick={() => navigate('/admin/students')}>
-                <Users size={18} />
-                <span>Take Attendance</span>
-              </button>
-              <button className="dashboard__quick-btn" onClick={() => navigate('/admin/quizzes')}>
-                <Trophy size={18} />
-                <span>Create Quiz</span>
-              </button>
-              <button className="dashboard__quick-btn" onClick={() => navigate('/admin/sessions')}>
-                <CalendarCheck size={18} />
-                <span>Session Builder</span>
-              </button>
-            </div>
-          </Card>
-        </motion.div>
+        <Button icon={<Plus size={18} />}>Quick Actions</Button>
       </div>
 
-      {/* Phase Progress */}
-      <motion.div variants={item}>
-        <Card padding="lg">
-          <div className="dashboard__section-header">
-            <TrendingUp size={16} style={{ color: 'var(--primary)' }} />
-            <span>Phase Progress</span>
-          </div>
-          <div className="dashboard__phases">
-            {phaseInfo.map(phase => {
-              const phaseSurahs = getSurahsByPhase(phase.phase);
-              const phaseTotalSessions = phaseSurahs.reduce((s, su) => s + su.sessions, 0);
-              const phaseCompleted = phaseSurahs.reduce((s, su) => {
-                let count = 0;
-                for (let i = 0; i < su.sessions; i++) {
-                  if (state.sessionProgress[`${su.num}-${i}`]?.completed) count++;
-                }
-                return s + count;
-              }, 0);
-              const pct = phaseTotalSessions > 0 ? Math.round((phaseCompleted / phaseTotalSessions) * 100) : 0;
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '40px' }}>
+        {stats.map((stat, i) => (
+          <Card key={i} padding="lg" variant="elevated">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: `${stat.color}15`, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <stat.icon size={24} />
+              </div>
+              <div>
+                <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>{stat.label}</div>
+                <div style={{ fontSize: '24px', fontWeight: 700 }}>{stat.value}</div>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
 
-              return (
-                <div
-                  key={phase.phase}
-                  className={`dashboard__phase-row ${currentPhase === phase.phase ? 'dashboard__phase-row--active' : ''}`}
-                >
-                  <div className="dashboard__phase-info">
-                    <div className="dashboard__phase-title">
-                      <Badge color={badgeColors[phase.phase]}>{phase.label}</Badge>
-                      <span>{phase.name}</span>
-                    </div>
-                    <span className="dashboard__phase-count">
-                      {phaseSurahs.length} surahs · {phaseCompleted}/{phaseTotalSessions} sessions
-                    </span>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px' }}>
+        {/* Recent Student Activity */}
+        <Card padding="lg">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 600 }}>Recent Mastery Activity</h3>
+            <Button variant="ghost" size="sm">View All</Button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {state.students.slice(0, 5).map(student => (
+              <div key={student.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderBottom: '1px solid var(--border)', lastChild: { border: 0 } }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 600 }}>
+                    {student.name[0]}
                   </div>
-                  <div className="dashboard__phase-bar-wrap">
-                    <div
-                      className="dashboard__phase-bar"
-                      style={{
-                        width: `${pct}%`,
-                        background: phaseColors[phase.phase],
-                      }}
-                    />
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: 500 }}>{student.name}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Joined {new Date(student.joinedAt).toLocaleDateString()}</div>
                   </div>
                 </div>
-              );
-            })}
+                <Badge label="Active" variant="success" dot />
+              </div>
+            ))}
+            {state.students.length === 0 && (
+              <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                No active students yet.
+              </div>
+            )}
           </div>
         </Card>
-      </motion.div>
-    </motion.div>
+
+        {/* Phase Progress */}
+        <Card padding="lg">
+           <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '24px' }}>Phase Delivery</h3>
+           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {[1, 2, 3, 4, 5].map(p => {
+                const totalInPhase = getTotalSessions(); // Mock logic for now
+                const publishedInPhase = Object.values(state.curriculum).filter(s => {
+                   const surah = surahs.find(sur => sur.num === s.surahNum);
+                   return surah?.phase === p;
+                }).length;
+                const progress = Math.round((publishedInPhase / (totalSessionsCount / 5)) * 100);
+
+                return (
+                  <div key={p}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}>
+                      <span>Phase {p}</span>
+                      <span style={{ fontWeight: 600 }}>{progress}%</span>
+                    </div>
+                    <ProgressBar progress={progress} variant={p === state.settings.currentPhase ? 'primary' : 'muted'} />
+                  </div>
+                )
+              })}
+           </div>
+        </Card>
+      </div>
+    </div>
   );
 }

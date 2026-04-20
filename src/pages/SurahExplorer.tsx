@@ -6,6 +6,7 @@ import Badge from '../components/ui/Badge';
 import Card from '../components/ui/Card';
 import { surahs, phaseInfo, getSurahsByPhase, type Surah } from '../data/surahs';
 import type { AppState } from '../data/store';
+import { sessionKey } from '../data/store';
 import './SurahExplorer.css';
 
 interface SurahExplorerProps {
@@ -37,7 +38,7 @@ export default function SurahExplorer({ state }: SurahExplorerProps) {
   const getCompletedSessions = (surah: Surah) => {
     let done = 0;
     for (let i = 0; i < surah.sessions; i++) {
-      if (state.sessionProgress[`${surah.num}-${i}`]?.completed) done++;
+      if (state.sessionProgress[sessionKey(surah.num, i)]?.completed) done++;
     }
     return done;
   };

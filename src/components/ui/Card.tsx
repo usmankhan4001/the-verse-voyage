@@ -1,28 +1,28 @@
-import type { ReactNode } from 'react';
-import './Card.css';
+import React from 'react';
 
 interface CardProps {
-  children: ReactNode;
-  className?: string;
-  variant?: 'default' | 'glass' | 'accent' | 'interactive';
+  children: React.ReactNode;
+  variant?: 'default' | 'glass' | 'elevated';
   padding?: 'none' | 'sm' | 'md' | 'lg';
+  className?: string;
   onClick?: () => void;
 }
 
 export default function Card({
   children,
-  className = '',
   variant = 'default',
   padding = 'md',
-  onClick,
+  className = '',
+  onClick
 }: CardProps) {
+  const variantClass = variant === 'glass' ? 'glass' : 'card';
+  const paddingClass = padding !== 'none' ? `p-${padding}` : '';
+  const interactiveClass = onClick ? 'cursor-pointer hover-scale' : '';
+
   return (
-    <div
-      className={`card card--${variant} card--pad-${padding} ${onClick ? 'card--clickable' : ''} ${className}`}
+    <div 
+      className={`${variantClass} ${paddingClass} ${interactiveClass} ${className}`}
       onClick={onClick}
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); } : undefined}
     >
       {children}
     </div>

@@ -1,194 +1,178 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { UserPlus, Trash2, AlertTriangle, Award, Users as UsersIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  Search, 
+  UserPlus, 
+  MoreVertical, 
+  Mail, 
+  Phone, 
+  Calendar,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Clock
+} from 'lucide-react';
+import { useAppState } from '../context/AppContext';
+import { formatDateShort } from '../data/store';
 import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import type { AppState } from '../data/store';
-import { calculateStreak, isAtRisk } from '../data/store';
-import './Students.css';
 
-interface StudentsProps {
-  state: AppState;
-  addStudent: (name: string) => void;
-  removeStudent: (id: string) => void;
-  markAttendance: (studentId: string, date: string, status: 'present' | 'absent' | 'pending') => void;
-}
+export default function Students() {
+  const { state, dispatch } = useAppState();
+  const [search, setSearch] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newStudent, setNewStudent] = useState({ name: '', username: '', passcode: '1234' });
 
-export default function Students({ state, addStudent, removeStudent, markAttendance }: StudentsProps) {
-  const [newName, setNewName] = useState('');
-  const [showAdd, setShowAdd] = useState(false);
+  const filteredStudents = state.students.filter(s => 
+    s.name.toLowerCase().includes(search.toLowerCase()) || 
+    s.username.toLowerCase().includes(search.toLowerCase())
+  );
 
-
-
-  const handleAdd = () => {
-    if (newName.trim()) {
-      addStudent(newName.trim());
-      setNewName('');
-      setShowAdd(false);
-    }
+  const handleAddStudent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newStudent.name || !newStudent.username) return;
+    dispatch({ type: 'ADD_STUDENT', payload: newStudent });
+    setShowAddModal(false);
+    setNewStudent({ name: '', username: '', passcode: '1234' });
   };
 
-  // Sort: at-risk first, then by streak desc
-  const sortedStudents = [...state.students].sort((a, b) => {
-    const aRisk = isAtRisk(a.id, state.attendance) ? 1 : 0;
-    const bRisk = isAtRisk(b.id, state.attendance) ? 1 : 0;
-    if (aRisk !== bRisk) return bRisk - aRisk;
-    return calculateStreak(b.id, state.attendance) - calculateStreak(a.id, state.attendance);
-  });
-
-  // Get last 7 dates
-  const last7Dates: string[] = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    last7Dates.push(d.toISOString().split('T')[0]);
-  }
+  const markAttendance = (studentId: string, status: 'present' | 'absent') => {
+    const today = new Date().toISOString().split('T')[0];
+    dispatch({ type: 'MARK_ATTENDANCE', payload: { studentId, date: today, status } });
+  };
 
   return (
-    <motion.div
-      className="students-page"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="students-page__head">
+    <div className="students-page animate-fade-in">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h2 className="page-title">Students</h2>
-          <p className="page-subtitle">{state.students.length} enrolled</p>
+          <h2 style={{ fontSize: '24px', fontWeight: 700 }}>Student Management</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>Track attendance and mastery progress.</p>
         </div>
-        <button className="students-page__add-btn" onClick={() => setShowAdd(!showAdd)}>
-          <UserPlus size={16} /> Add Student
-        </button>
+        <Button icon={<UserPlus size={18} />} onClick={() => setShowAddModal(true)}>Add Student</Button>
       </div>
 
-      {/* Add Student Form */}
-      {showAdd && (
-        <Card padding="md" className="students-page__add-form">
-          <input
-            type="text"
-            placeholder="Student name..."
-            value={newName}
-            onChange={e => setNewName(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleAdd()}
-            autoFocus
-          />
-          <div className="students-page__add-actions">
-            <button className="students-page__save-btn" onClick={handleAdd}>Add</button>
-            <button className="students-page__cancel-btn" onClick={() => setShowAdd(false)}>Cancel</button>
+      <Card padding="none">
+        <div style={{ padding: '20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ position: 'relative', width: '320px' }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input 
+              type="text" 
+              placeholder="Filter by name or username..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ width: '100%', padding: '10px 12px 10px 40px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--bg)' }}
+            />
           </div>
-        </Card>
-      )}
-
-      {/* Attendance Grid */}
-      {state.students.length > 0 && (
-        <Card padding="none">
-          <div className="students-page__grid-scroll">
-            <table className="students-page__table">
-              <thead>
-                <tr>
-                  <th className="students-page__th-name">Student</th>
-                  <th className="students-page__th-streak">Streak</th>
-                  {last7Dates.map(d => (
-                    <th key={d} className="students-page__th-date">
-                      {new Date(d + 'T00:00:00').toLocaleDateString('en', { weekday: 'short', day: 'numeric' })}
-                    </th>
-                  ))}
-                  <th className="students-page__th-actions"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedStudents.map(student => {
-                  const streak = calculateStreak(student.id, state.attendance);
-                  const atRisk = isAtRisk(student.id, state.attendance);
-
-                  return (
-                    <tr key={student.id} className={atRisk ? 'students-page__row--risk' : ''}>
-                      <td className="students-page__td-name">
-                        <span>{student.name}</span>
-                        {atRisk && (
-                          <span className="students-page__risk-flag" title="3+ consecutive absences">
-                            <AlertTriangle size={12} />
-                          </span>
-                        )}
-                      </td>
-                      <td className="students-page__td-streak">
-                        {streak > 0 ? (
-                          <Badge color={streak >= 5 ? 'gold' : 'green'} size="sm">
-                            🔥 {streak}
-                          </Badge>
-                        ) : (
-                          <span className="students-page__no-streak">—</span>
-                        )}
-                      </td>
-                      {last7Dates.map(date => {
-                        const status = state.attendance[student.id]?.[date] || 'pending';
-                        return (
-                          <td key={date} className="students-page__td-att">
-                            <button
-                              className={`students-page__att-btn students-page__att-btn--${status}`}
-                              onClick={() => {
-                                const next = status === 'pending' ? 'present' : status === 'present' ? 'absent' : 'pending';
-                                markAttendance(student.id, date, next);
-                              }}
-                            >
-                              {status === 'present' ? '✅' : status === 'absent' ? '❌' : '⏳'}
-                            </button>
-                          </td>
-                        );
-                      })}
-                      <td>
-                        <button
-                          className="students-page__delete-btn"
-                          onClick={() => removeStudent(student.id)}
-                          title="Remove student"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+            Showing {filteredStudents.length} students
           </div>
-        </Card>
-      )}
+        </div>
 
-      {/* Leaderboard */}
-      {state.students.length > 0 && (
-        <Card padding="md">
-          <h3 className="students-page__section-title">
-            <Award size={16} style={{ color: 'var(--gold)' }} /> Leaderboard
-          </h3>
-          <div className="students-page__leaderboard">
-            {[...state.students]
-              .sort((a, b) => calculateStreak(b.id, state.attendance) - calculateStreak(a.id, state.attendance))
-              .slice(0, 10)
-              .map((student, i) => {
-                const streak = calculateStreak(student.id, state.attendance);
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
+                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Student</th>
+                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Username</th>
+                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Today's Attendance</th>
+                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Status</th>
+                <th style={{ padding: '16px 24px', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredStudents.map(student => {
+                const today = new Date().toISOString().split('T')[0];
+                const attStatus = state.attendance[student.id]?.[today];
+                
+                // At-Risk? (3 consecutive absences)
+                const history = Object.values(state.attendance[student.id] || {}).slice(-3);
+                const isAtRisk = history.length >= 3 && history.every(h => h === 'absent');
+
                 return (
-                  <div key={student.id} className="students-page__lb-row">
-                    <span className={`students-page__lb-rank ${i < 3 ? 'students-page__lb-rank--top' : ''}`}>
-                      {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
-                    </span>
-                    <span className="students-page__lb-name">{student.name}</span>
-                    <Badge color={streak >= 5 ? 'gold' : streak > 0 ? 'green' : 'muted'} size="sm">
-                      🔥 {streak}
-                    </Badge>
-                  </div>
+                  <tr key={student.id} style={{ borderBottom: '1px solid var(--border)', transition: 'var(--transition)' }} className="hover-bg">
+                    <td style={{ padding: '16px 24px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>
+                          {student.name[0]}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: '14px' }}>{student.name}</div>
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Joined {formatDateShort(student.joinedAt)}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '16px 24px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+                      @{student.username}
+                    </td>
+                    <td style={{ padding: '16px 24px' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button 
+                          onClick={() => markAttendance(student.id, 'present')}
+                          style={{ padding: '6px', borderRadius: '6px', background: attStatus === 'present' ? 'var(--success)' : 'var(--bg)', color: attStatus === 'present' ? 'white' : 'var(--text-muted)', border: '1px solid var(--border)' }}
+                        >
+                          <CheckCircle size={18} />
+                        </button>
+                        <button 
+                          onClick={() => markAttendance(student.id, 'absent')}
+                          style={{ padding: '6px', borderRadius: '6px', background: attStatus === 'absent' ? 'var(--error)' : 'var(--bg)', color: attStatus === 'absent' ? 'white' : 'var(--text-muted)', border: '1px solid var(--border)' }}
+                        >
+                          <XCircle size={18} />
+                        </button>
+                      </div>
+                    </td>
+                    <td style={{ padding: '16px 24px' }}>
+                      {isAtRisk ? (
+                        <Badge label="At Risk" variant="danger" dot />
+                      ) : (
+                        <Badge label="Active" variant="success" dot />
+                      )}
+                    </td>
+                    <td style={{ padding: '16px 24px' }}>
+                      <button className="sp__icon-btn"><MoreVertical size={18} /></button>
+                    </td>
+                  </tr>
                 );
               })}
-          </div>
-        </Card>
-      )}
+            </tbody>
+          </table>
+          {filteredStudents.length === 0 && (
+            <div style={{ padding: '80px', textAlign: 'center' }}>
+              <div style={{ marginBottom: '16px', color: 'var(--text-muted)' }}><Users size={48} strokeWidth={1} /></div>
+              <h3 style={{ fontSize: '16px', fontWeight: 600 }}>No students found</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Try a different search term or add a new student.</p>
+            </div>
+          )}
+        </div>
+      </Card>
 
-      {state.students.length === 0 && (
-        <div className="students-page__empty">
-          <UsersIcon size={48} />
-          <h3>No students yet</h3>
-          <p>Add your first student to start tracking attendance.</p>
+      {/* Add Student Modal */}
+      {showAddModal && (
+        <div className="admin-gate" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
+          <form className="card glass animate-slide-up" style={{ width: '400px', padding: '32px' }} onSubmit={handleAddStudent}>
+            <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '24px' }}>Register New Student</h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Full Name</label>
+                <input type="text" fullWidth value={newStudent.name} onChange={e => setNewStudent({...newStudent, name: e.target.value})} placeholder="e.g. Usman Khan" style={{ width: '100%' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Username</label>
+                <input type="text" fullWidth value={newStudent.username} onChange={e => setNewStudent({...newStudent, username: e.target.value})} placeholder="e.g. usmankhan" style={{ width: '100%' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>Secret Passcode</label>
+                <input type="text" fullWidth value={newStudent.passcode} onChange={e => setNewStudent({...newStudent, passcode: e.target.value})} placeholder="Default: 1234" style={{ width: '100%' }} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+               <Button type="button" variant="outline" fullWidth onClick={() => setShowAddModal(false)}>Cancel</Button>
+               <Button type="submit" fullWidth>Create Account</Button>
+            </div>
+          </form>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

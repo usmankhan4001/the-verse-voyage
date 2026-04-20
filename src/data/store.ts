@@ -1,4 +1,4 @@
-// ── Offline-first localStorage persistence layer ──
+// ── The Verse Voyage: Robust Store v2.0.0 ──
 
 export interface Student {
   id: string;
@@ -9,66 +9,33 @@ export interface Student {
   notes: string;
 }
 
-export interface AttendanceRecord {
-  [studentId: string]: {
-    [date: string]: 'present' | 'absent' | 'pending';
-  };
+export interface SessionMastery {
+  listens: number;
+  pdfViewed: boolean;
+  quizScore?: number;
+  quizPassed: boolean;
+  mastered: boolean;
+  masteredAt?: string;
 }
 
-export interface QuizQuestion {
-  id: string;
-  type: 'mcq' | 'fill_blank' | 'reflection';
-  question: string;
-  options?: string[];
-  answer: string;
-}
-
-export interface Quiz {
-  id: string;
-  surahNum: number;
-  title: string;
-  questions: QuizQuestion[];
-  createdAt: string;
-}
-
-export interface SessionStatus {
+export interface SessionDefinition {
   surahNum: number;
   sessionIndex: number;
-  completed: boolean;
-  completedAt?: string;
-  topic?: string;
-  tafseerSummary?: string;
-  startAyah?: number;
-  endAyah?: number;
+  topic: string;
+  tafseerSummary: string;
+  startAyah: number;
+  endAyah: number;
   pdfUrl?: string;
-  videoUrl?: string;
-  tafseerAudioUrl?: string;
+  videoUrl?: string; // Optional
+  tafseerAudioUrl?: string; // Optional
   ayatAudioUrl?: string; // Legacy/Fallback
-  contentChecklist: {
-    arabicCard: boolean;
-    audio: boolean;
-    wordByWord: boolean;
-    tafseer: boolean;
-    posted: boolean;
+  isPublished: boolean;
+}
+
+export interface AttendanceRecord {
+  [studentId: string]: {
+    [date: string]: 'present' | 'absent' | 'late' | 'pending';
   };
-}
-
-export interface StudentProgress {
-  studentId: string;
-  sessionKey: string; // "surahNum-sessionIndex"
-  audioListens: number;
-  pdfRead: boolean;
-  quizCompleted: boolean;
-  quizScore?: number;
-  completed: boolean;
-}
-
-export interface QuizSubmission {
-  id: string;
-  studentId: string;
-  quizId: string;
-  score: number;
-  submittedAt: string;
 }
 
 export interface AppSettings {
@@ -77,159 +44,95 @@ export interface AppSettings {
   unlockedPhase: number;
   courseName: string;
   teacherName: string;
+  adminPasscode: string;
 }
 
 export interface AppState {
+  version: "2.0.0";
+  lastSync: string;
   students: Student[];
+  curriculum: { [key: string]: SessionDefinition }; // "surahNum-sessionIndex"
+  testSessions: { [key: string]: boolean }; // Global teacher-level "completed" flag
+  mastery: { [studentId: string]: { [sessionKey: string]: SessionMastery } };
   attendance: AttendanceRecord;
-  sessionProgress: { [key: string]: SessionStatus }; // Teacher's global check
-  studentProgress: { [studentId: string]: { [sessionKey: string]: StudentProgress } }; // Individual student tracking
-  quizSubmissions: QuizSubmission[];
-  quizzes: Quiz[];
-  teacherNotes: { [surahNum: string]: string };
   settings: AppSettings;
 }
 
-const STORAGE_KEY = 'juz-amma-cms';
+const STORAGE_KEY = 'verse-voyage-v2';
 
-const defaultState: AppState = {
+export const DEFAULT_STATE: AppState = {
+  version: "2.0.0",
+  lastSync: new Date().toISOString(),
   students: [],
+  curriculum: {},
+  testSessions: {},
+  mastery: {},
   attendance: {},
-  sessionProgress: {
-    '99-0': {
-      surahNum: 99,
-      sessionIndex: 0,
-      completed: true,
-      topic: 'The Great Earthquake',
-      tafseerSummary: 'جب زمین اپنی پوری سختی سے ہلا دی جائے گی اور زمین اپنے بوجھ نکال باہر پھینک دے گی۔ یہ سورت قیامت کے دن کے زبردست انقلاب اور انسان کے اعمال کی حتمی جوابدہی کو بیان کرتی ہے۔',
-      startAyah: 1,
-      endAyah: 5,
-      pdfUrl: 'https://www.searchforislam.com/wp-content/uploads/2019/02/099-Az-Zalzalah.pdf',
-      contentChecklist: {
-        arabicCard: true,
-        audio: true,
-        wordByWord: true,
-        tafseer: true,
-        posted: true,
-      }
-    }
-  },
-  studentProgress: {},
-  quizSubmissions: [],
-  quizzes: [],
-  teacherNotes: {},
   settings: {
     theme: 'system',
     currentPhase: 1,
     unlockedPhase: 1,
     courseName: 'The Verse Voyage',
     teacherName: '',
+    adminPasscode: 'admin123'
   },
 };
 
-export function loadState(): AppState {
+// ── Persistence Layer ──
+
+export function loadPersistedState(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...defaultState };
+    if (!raw) return DEFAULT_STATE;
+    
     const parsed = JSON.parse(raw);
-    return { ...defaultState, ...parsed };
-  } catch {
-    return { ...defaultState };
+    
+    // Migration logic can be added here if version changes
+    if (parsed.version !== "2.0.0") {
+      console.warn("Schema mismatch. Resetting to version 2.0.0");
+      return DEFAULT_STATE;
+    }
+    
+    return { ...DEFAULT_STATE, ...parsed };
+  } catch (err) {
+    console.error("Failed to load state:", err);
+    return DEFAULT_STATE;
   }
 }
 
-export function saveState(state: AppState): void {
+export function persistState(state: AppState): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (e) {
-    console.error('Failed to save state:', e);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      ...state,
+      lastSync: new Date().toISOString()
+    }));
+  } catch (err) {
+    console.error("Failed to persist state:", err);
   }
 }
 
-export function exportData(): string {
-  const state = loadState();
-  return JSON.stringify(state, null, 2);
-}
+// ── Shared Utilities ──
 
-export function importData(json: string): AppState | null {
-  try {
-    const parsed = JSON.parse(json);
-    saveState(parsed);
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-// ── Helper: generate unique IDs ──
 export function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+  return Math.random().toString(36).substring(2, 9) + Date.now().toString(36).substring(4);
 }
 
-// ── Helper: get session key ──
-export function sessionKey(surahNum: number, sessionIndex: number): string {
+export function getSessionKey(surahNum: number, sessionIndex: number): string {
   return `${surahNum}-${sessionIndex}`;
 }
 
-// ── Helper: calculate streak ──
-export function calculateStreak(
-  studentId: string,
-  attendance: AttendanceRecord
-): number {
-  const records = attendance[studentId];
-  if (!records) return 0;
-  
-  const dates = Object.keys(records).sort().reverse();
-  let streak = 0;
-  
-  for (const date of dates) {
-    if (records[date] === 'present') {
-      streak++;
-    } else {
-      break;
-    }
-  }
-  
-  return streak;
+export function getMastery(state: AppState, studentId: string, surahNum: number, sessionIndex: number): SessionMastery {
+  const key = getSessionKey(surahNum, sessionIndex);
+  return state.mastery[studentId]?.[key] || {
+    listens: 0,
+    pdfViewed: false,
+    quizPassed: false,
+    mastered: false
+  };
 }
 
-// ── Helper: check at-risk ──
-export function isAtRisk(
-  studentId: string,
-  attendance: AttendanceRecord
-): boolean {
-  const records = attendance[studentId];
-  if (!records) return false;
-  
-  const dates = Object.keys(records).sort().reverse();
-  let consecutiveMisses = 0;
-  
-  for (const date of dates) {
-    if (records[date] === 'absent') {
-      consecutiveMisses++;
-      if (consecutiveMisses >= 3) return true;
-    } else {
-      break;
-    }
-  }
-  
-  return false;
-}
-
-// ── Helper: format date ──
-export function formatDate(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
-export function formatDateShort(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
+export function isSessionLocked(state: AppState, studentId: string, surahNum: number, sessionIdx: number): boolean {
+  if (sessionIdx === 0) return false; // First session is always unlocked
+  const prevKey = getSessionKey(surahNum, sessionIdx - 1);
+  return !state.mastery[studentId]?.[prevKey]?.mastered;
 }

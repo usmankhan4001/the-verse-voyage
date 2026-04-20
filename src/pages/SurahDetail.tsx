@@ -1,9 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Check, FileText, Headphones, File, Play } from 'lucide-react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Check, FileText, Headphones, Play } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
-import { getSurahByNum, phaseInfo, sessionSteps } from '../data/surahs';
+import Button from '../components/ui/Button';
+import { getSurahByNum, phaseInfo } from '../data/surahs';
 import type { AppState, SessionStatus } from '../data/store';
 import { sessionKey } from '../data/store';
 import './SurahDetail.css';
@@ -24,6 +26,7 @@ export default function SurahDetail({
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const surah = getSurahByNum(Number(id));
+  const [activeTab, setActiveTab] = useState(0);
 
   if (!surah) {
     return (
@@ -39,8 +42,6 @@ export default function SurahDetail({
     1: 'green', 2: 'purple', 3: 'gold', 4: 'coral',
   };
 
-  const note = state.teacherNotes[surah.num] || '';
-
   const sessions = Array.from({ length: surah.sessions }, (_, i) => {
     const key = sessionKey(surah.num, i);
     const defaultSess = surah.defaultSessions?.[i];
@@ -52,182 +53,171 @@ export default function SurahDetail({
     } as any;
 
     Object.assign(sess, defaultSess, sessMap);
-    
-    // Final overrides for key identifiers
     sess.surahNum = surah.num;
     sess.sessionIndex = i;
-    
     return sess as SessionStatus;
   });
 
-  const completedCount = sessions.filter(s => s.completed).length;
+  const activeSession = sessions[activeTab];
 
   const toggleChecklist = (sessionIdx: number, field: keyof SessionStatus['contentChecklist']) => {
     const key = sessionKey(surah.num, sessionIdx);
-    const current = state.sessionProgress[key];
-    const checklist = current?.contentChecklist || {
-      arabicCard: false, audio: false, wordByWord: false, tafseer: false, posted: false,
+    const current = state.sessionProgress[key] || {
+      surahNum: surah.num,
+      sessionIndex: sessionIdx,
+      completed: false,
+      contentChecklist: { arabicCard: false, audio: false, wordByWord: false, tafseer: false, posted: false },
     };
+    
     updateSessionProgress(surah.num, sessionIdx, {
-      contentChecklist: { ...checklist, [field]: !checklist[field] },
+      contentChecklist: { ...current.contentChecklist, [field]: !current.contentChecklist[field] },
     });
   };
 
   const updateSessionField = (sessionIdx: number, field: keyof SessionStatus, value: any) => {
+    if (field === 'startAyah' || field === 'endAyah') {
+      const numVal = Number(value);
+      if (isNaN(numVal) || numVal < 1 || numVal > surah.ayaat) return;
+      const key = sessionKey(surah.num, sessionIdx);
+      const current = state.sessionProgress[key];
+      const otherField = field === 'startAyah' ? 'endAyah' : 'startAyah';
+      const otherVal = current?.[otherField] || surah.defaultSessions?.[sessionIdx]?.[otherField];
+      if (otherVal) {
+        if (field === 'startAyah' && numVal > otherVal) return;
+        if (field === 'endAyah' && numVal < otherVal) return;
+      }
+    }
     updateSessionProgress(surah.num, sessionIdx, { [field]: value });
   };
 
   return (
-    <motion.div
-      className="surah-detail"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      {/* Back button */}
-      <button className="surah-detail__back" onClick={() => navigate('/admin/surahs')}>
-        <ArrowLeft size={16} /> Back to Surahs
-      </button>
-
-      {/* Header */}
-      <div className="surah-detail__header">
-        <div className="surah-detail__header-bg">
-          <div className="surah-detail__arabic arabic">{surah.arabic}</div>
-        </div>
-        <div className="surah-detail__header-content">
-          <div className="surah-detail__header-top">
-            <Badge color={phaseColorMap[surah.phase]}>{phase.label} · {phase.name}</Badge>
-            <span className="surah-detail__num">#{surah.num}</span>
-          </div>
-          <h1 className="surah-detail__title">Surah {surah.name}</h1>
-          <p className="surah-detail__meta">
-            {surah.ayaat} Ayaat · {surah.sessions} Sessions · {completedCount}/{surah.sessions} Done
-          </p>
+    <div className="surah-detail">
+      <div className="surah-detail__nav">
+        <button className="surah-detail__back" onClick={() => navigate('/admin/surahs')}>
+          <ArrowLeft size={16} /> Back
+        </button>
+        <div className="surah-detail__header-info">
+          <Badge color={phaseColorMap[surah.phase]}>{phase.label}</Badge>
+          <span className="surah-detail__title-text">Surah {surah.name}</span>
         </div>
       </div>
 
-      <div className="surah-detail__two-col">
-        {/* Sessions Editor */}
-        <div className="surah-detail__sessions-container">
-          <h3 className="surah-detail__section-title">Session Breakdown & Resources</h3>
-          <div className="surah-detail__sessions">
-            {sessions.map((sess, i) => (
-              <Card key={i} padding="md" className={`surah-detail__session-card ${sess.completed ? 'surah-detail__session-card--done' : ''}`}>
-                <div className="surah-detail__session-head">
-                  <span className="surah-detail__session-num">Session {i + 1}</span>
-                  <button
-                    className={`surah-detail__complete-btn ${sess.completed ? 'surah-detail__complete-btn--done' : ''}`}
-                    onClick={() => {
-                      if (!sess.completed) completeSession(surah.num, i);
-                    }}
-                  >
-                    <Check size={14} />
-                    {sess.completed ? 'Done' : 'Mark Done'}
-                  </button>
-                </div>
-
-                {/* Session Topic (Student Portal Theme) */}
-                <div className="surah-detail__grid-top">
-                  <div className="surah-detail__field">
-                    <label>Session Topic (Theme)</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Introduction & Verses 1-5"
-                      value={sess.topic || ''}
-                      onChange={(e) => updateSessionField(i, 'topic', e.target.value)}
-                    />
-                  </div>
-
-                  {/* Compulsory Ayah Range */}
-                  <div className="surah-detail__field-group">
-                    <div className="surah-detail__field">
-                      <label>Start Ayah</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max={surah.ayaat}
-                        value={sess.startAyah || ''}
-                        onChange={(e) => updateSessionField(i, 'startAyah', Number(e.target.value))}
-                      />
-                    </div>
-                    <div className="surah-detail__field">
-                      <label>End Ayah</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max={surah.ayaat}
-                        value={sess.endAyah || ''}
-                        onChange={(e) => updateSessionField(i, 'endAyah', Number(e.target.value))}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tafseer Summary Content */}
-                <div className="surah-detail__field">
-                  <label>Tafseer Summary (Compulsory Reading)</label>
-                  <textarea
-                    placeholder="Provide a detailed summary for students to read..."
-                    value={sess.tafseerSummary || ''}
-                    onChange={(e) => updateSessionField(i, 'tafseerSummary', e.target.value)}
-                    rows={4}
-                  />
-                </div>
-
-                {/* Resource Links */}
-                <div className="surah-detail__resources-grid">
-                  <div className="surah-detail__field">
-                    <label><File size={12} /> PDF Link</label>
-                    <input
-                      type="text"
-                      placeholder="URL..."
-                      value={sess.pdfUrl || ''}
-                      onChange={(e) => updateSessionField(i, 'pdfUrl', e.target.value)}
-                    />
-                  </div>
-                  <div className="surah-detail__field">
-                    <label><Play size={12} /> Video Link</label>
-                    <input
-                      type="text"
-                      placeholder="URL..."
-                      value={sess.videoUrl || ''}
-                      onChange={(e) => updateSessionField(i, 'videoUrl', e.target.value)}
-                    />
-                  </div>
-                  <div className="surah-detail__field">
-                    <label><Headphones size={12} /> Audio Tafseer</label>
-                    <input
-                      type="text"
-                      placeholder="URL..."
-                      value={sess.tafseerAudioUrl || ''}
-                      onChange={(e) => updateSessionField(i, 'tafseerAudioUrl', e.target.value)}
-                    />
-                  </div>
-                  {/* Legacy Ayat Audio field removed as we use Range now */}
-                </div>
-
-                <div className="surah-detail__checklist">
-                  <label>Content Checklist:</label>
-                  <div className="surah-detail__checklist-items">
-                    {(['arabicCard', 'audio', 'wordByWord', 'tafseer', 'posted'] as const).map(field => (
-                      <label key={field} className="surah-detail__check-item">
-                        <input
-                          type="checkbox"
-                          checked={sess.contentChecklist?.[field] || false}
-                          onChange={() => toggleChecklist(i, field)}
-                        />
-                        <span>{field === 'arabicCard' ? 'Arabic Card' : field === 'wordByWord' ? 'Word-by-Word' : field.charAt(0).toUpperCase() + field.slice(1)}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </Card>
+      <div className="surah-detail__layout">
+        <div className="surah-detail__main-col">
+          <div className="surah-detail__tabs">
+            {sessions.map((_, i) => (
+              <button 
+                key={i} 
+                className={`surah-detail__tab ${activeTab === i ? 'surah-detail__tab--active' : ''} ${sessions[i].completed ? 'surah-detail__tab--done' : ''}`}
+                onClick={() => setActiveTab(i)}
+              >
+                Session {i + 1}
+                {sessions[i].completed && <Check size={12} />}
+              </button>
             ))}
+          </div>
+
+          <div className="surah-detail__content">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Card padding="lg">
+                  <div className="surah-detail__session-header">
+                    <h3>Session {activeTab + 1} Configuration</h3>
+                    <Button 
+                      variant={activeSession.completed ? 'success' : 'primary'}
+                      size="sm"
+                      onClick={() => !activeSession.completed && completeSession(surah.num, activeTab)}
+                      disabled={activeSession.completed}
+                      icon={activeSession.completed ? <Check size={14} /> : null}
+                    >
+                      {activeSession.completed ? 'Completed' : 'Mark as Done'}
+                    </Button>
+                  </div>
+
+                  <div className="surah-detail__editor-grid">
+                    <div className="surah-detail__field">
+                      <label>Topic / Theme</label>
+                      <input
+                        type="text"
+                        value={activeSession.topic || ''}
+                        onChange={(e) => updateSessionField(activeTab, 'topic', e.target.value)}
+                        placeholder="e.g., Intro & Verses 1-5"
+                      />
+                    </div>
+
+                    <div className="surah-detail__field-row">
+                      <div className="surah-detail__field">
+                        <label>Start Ayah</label>
+                        <input
+                          type="number"
+                          value={activeSession.startAyah || ''}
+                          onChange={(e) => updateSessionField(activeTab, 'startAyah', e.target.value)}
+                        />
+                      </div>
+                      <div className="surah-detail__field">
+                        <label>End Ayah</label>
+                        <input
+                          type="number"
+                          value={activeSession.endAyah || ''}
+                          onChange={(e) => updateSessionField(activeTab, 'endAyah', e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="surah-detail__field">
+                      <label>Tafseer Summary</label>
+                      <textarea
+                        rows={4}
+                        value={activeSession.tafseerSummary || ''}
+                        onChange={(e) => updateSessionField(activeTab, 'tafseerSummary', e.target.value)}
+                        placeholder="Enter key points for students..."
+                      />
+                    </div>
+
+                    <div className="surah-detail__resource-links">
+                      <div className="surah-detail__field">
+                        <label><FileText size={14} /> PDF Link</label>
+                        <input type="text" value={activeSession.pdfUrl || ''} onChange={(e) => updateSessionField(activeTab, 'pdfUrl', e.target.value)} />
+                      </div>
+                      <div className="surah-detail__field">
+                        <label><Play size={14} /> Video Link</label>
+                        <input type="text" value={activeSession.videoUrl || ''} onChange={(e) => updateSessionField(activeTab, 'videoUrl', e.target.value)} />
+                      </div>
+                      <div className="surah-detail__field">
+                        <label><Headphones size={14} /> Audio Link</label>
+                        <input type="text" value={activeSession.tafseerAudioUrl || ''} onChange={(e) => updateSessionField(activeTab, 'tafseerAudioUrl', e.target.value)} />
+                      </div>
+                    </div>
+
+                    <div className="surah-detail__checklist-section">
+                      <label>Resource Status</label>
+                      <div className="surah-detail__checklist-grid">
+                        {(['arabicCard', 'audio', 'wordByWord', 'tafseer', 'posted'] as const).map(field => (
+                          <label key={field} className="surah-detail__check-item">
+                            <input
+                              type="checkbox"
+                              checked={activeSession.contentChecklist?.[field] || false}
+                              onChange={() => toggleChecklist(activeTab, field)}
+                            />
+                            <span>{field === 'arabicCard' ? 'Arabic Card' : field.charAt(0).toUpperCase() + field.slice(1)}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
 
         <div className="surah-detail__side-col">
-          {/* Themes */}
           <Card padding="md" className="surah-detail__side-card">
             <h3 className="surah-detail__section-title">
               <FileText size={16} /> Surah Themes
@@ -239,35 +229,18 @@ export default function SurahDetail({
             </div>
           </Card>
 
-          {/* Teacher Notes */}
           <Card padding="md" className="surah-detail__side-card">
             <h3 className="surah-detail__section-title">Teacher Notes</h3>
             <textarea
               className="surah-detail__notes"
               placeholder="Add your notes for this surah..."
-              value={note}
+              value={state.teacherNotes[surah.num] || ''}
               onChange={e => setTeacherNote(surah.num, e.target.value)}
               rows={8}
             />
           </Card>
-
-          {/* Session Format Reference */}
-          <Card padding="md" className="surah-detail__side-card">
-            <h3 className="surah-detail__section-title">Session Format Reference</h3>
-            <div className="surah-detail__steps">
-              {sessionSteps.map((step, i) => (
-                <div key={i} className="surah-detail__step">
-                  <div className="surah-detail__step-dot" style={{ background: step.color }} />
-                  <div>
-                    <div className="surah-detail__step-title">{step.title}</div>
-                    <div className="surah-detail__step-desc">{step.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

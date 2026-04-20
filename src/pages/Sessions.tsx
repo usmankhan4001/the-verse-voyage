@@ -1,206 +1,189 @@
-import { useState, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { CalendarCheck, Check, ChevronRight, Upload, Info } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  FileDown, 
+  FileUp, 
+  Plus, 
+  Settings2, 
+  Search,
+  BookOpen,
+  ChevronRight,
+  ExternalLink,
+  CheckCircle2,
+  Trash2,
+  AlertCircle
+} from 'lucide-react';
+import { useAppState } from '../context/AppContext';
+import { surahs, getTotalSessions } from '../data/surahs';
+import { getSessionKey, SessionDefinition } from '../data/store';
 import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
-import { sessionSteps, phaseInfo, getSurahsByPhase } from '../data/surahs';
-import type { AppState, SessionStatus } from '../data/store';
-import { sessionKey } from '../data/store';
-import './Sessions.css';
 
-interface SessionsProps {
-  state: AppState;
-  completeSession: (surahNum: number, sessionIndex: number) => void;
-  importSessionsFromCSV: (sessions: Partial<SessionStatus>[]) => void;
-}
+export default function Sessions() {
+  const { state, dispatch } = useAppState();
+  const [search, setSearch] = useState('');
+  const [editingSession, setEditingSession] = useState<{key: string, data: Partial<SessionDefinition>} | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
 
-export default function Sessions({ state, completeSession, importSessionsFromCSV }: SessionsProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [importStatus, setImportStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
-
-  const currentPhase = state.settings.currentPhase;
-  const phaseSurahs = getSurahsByPhase(currentPhase);
-  const phase = phaseInfo.find(p => p.phase === currentPhase)!;
-
-  // Build session list for current phase
-  const allSessions = phaseSurahs.flatMap(surah =>
-    Array.from({ length: surah.sessions }, (_, i) => ({
-      surah,
-      index: i,
-      key: sessionKey(surah.num, i),
-      status: state.sessionProgress[sessionKey(surah.num, i)],
-    }))
+  const curriculumList = Object.entries(state.curriculum).filter(([key, sess]) => 
+    sess.topic.toLowerCase().includes(search.toLowerCase()) || 
+    key.includes(search)
   );
 
-  const completedCount = allSessions.filter(s => s.status?.completed).length;
+  const downloadCSVTemplate = () => {
+    const headers = ['SurahNum', 'SessionIndex', 'Topic', 'UrduTafseer', 'StartAyah', 'EndAyah', 'PDF_URL', 'Audio_URL'];
+    const row = ['99', '1', 'The Great Earthquake', 'جب زمین ہلا دی جائے گی', '1', '8', 'https://...', 'https://...'];
+    const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + row.join(",");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "verse_voyage_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const text = event.target?.result as string;
-        const rows = text.split(/\r?\n/).filter(row => row.trim());
-        
-        // Skip header
-        const dataRows = rows.slice(1);
-        const importedSessions: Partial<SessionStatus>[] = dataRows.map(row => {
-          // Robust split for CSV (handles some quotes)
-          const cols = row.split(',').map(c => c.trim());
-          return {
-            surahNum: parseInt(cols[0]),
-            sessionIndex: parseInt(cols[1]),
-            topic: cols[2],
-            startAyah: parseInt(cols[3]),
-            endAyah: parseInt(cols[4]),
-            tafseerSummary: cols[5],
-            pdfUrl: cols[6],
-            tafseerAudioUrl: cols[7],
-            videoUrl: cols[8],
-          };
-        }).filter(s => !isNaN(s.surahNum!) && !isNaN(s.sessionIndex!));
-
-        if (importedSessions.length > 0) {
-          importSessionsFromCSV(importedSessions);
-          setImportStatus({ type: 'success', msg: `Successfully imported ${importedSessions.length} sessions.` });
-        } else {
-          setImportStatus({ type: 'error', msg: 'No valid sessions found in CSV.' });
-        }
-      } catch (err) {
-        setImportStatus({ type: 'error', msg: 'Failed to parse CSV. Check format.' });
-      }
-    };
-    reader.readAsText(file, 'UTF-8');
+  const handleManualSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSession) return;
+    dispatch({ 
+      type: 'UPDATE_SESSION', 
+      payload: { key: editingSession.key, updates: editingSession.data as SessionDefinition } 
+    });
+    setEditingSession(null);
   };
 
   return (
-    <motion.div
-      className="sessions-page"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="sessions-page__head">
+    <div className="sessions-page animate-fade-in">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h2 className="page-title">Session Manager</h2>
-          <p className="page-subtitle">
-            {phase.label} · {phase.name} · {completedCount}/{allSessions.length} sessions completed
-          </p>
+          <h2 style={{ fontSize: '24px', fontWeight: 700 }}>Curriculum Manager</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>Configure surahs, sessions, and mastery content.</p>
         </div>
-        
-        <div className="sessions-page__actions">
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileUpload} 
-            accept=".csv" 
-            style={{ display: 'none' }} 
-          />
-          <button 
-            className="sessions-page__template-btn"
-            onClick={() => {
-              const headers = 'surah_num,session_index,topic,start_ayah,end_ayah,tafseer_urdu,pdf_url,audio_url,video_url';
-              const sample = '\n78,0,Introduction to Surah Naba,1,5,سورہ نبا کا تعارف اور پہلی پانچ آیات کی تفسیر,https://example.com/guide.pdf,https://example.com/audio.mp3,';
-              const blob = new Blob([headers + sample], { type: 'text/csv' });
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = 'session_import_template.csv';
-              a.click();
-            }}
-          >
-            Download Template
-          </button>
-          <button 
-            className="sessions-page__import-btn"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Upload size={16} /> Import CSV
-          </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <Button variant="outline" icon={<FileDown size={18} />} onClick={downloadCSVTemplate}>Template</Button>
+          <Button variant="outline" icon={<FileUp size={18} />} onClick={() => setIsImporting(true)}>Bulk Import</Button>
+          <Button icon={<Plus size={18} />}>New Session</Button>
         </div>
       </div>
 
-      {importStatus && (
-        <div className={`sessions-page__status sessions-page__status--${importStatus.type}`}>
-          {importStatus.msg}
+      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '32px' }}>
+        {/* Statistics & Filters */}
+        <aside style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <Card padding="md">
+            <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '16px' }}>Curriculum Health</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Published Sessions</span>
+                  <Badge label={`${Object.keys(state.curriculum).length} / ${getTotalSessions()}`} variant="primary" />
+               </div>
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Missing PDF Links</span>
+                  <Badge label={`${Object.values(state.curriculum).filter(s => !s.pdfUrl).length}`} variant="warning" />
+               </div>
+            </div>
+          </Card>
+
+          <div style={{ position: 'relative' }}>
+            <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input 
+              type="text" 
+              placeholder="Filter topics..." 
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ width: '100%', padding: '10px 12px 10px 40px', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--bg)' }}
+            />
+          </div>
+        </aside>
+
+        {/* Sessions List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {curriculumList.map(([key, sess]) => {
+            const surah = surahs.find(s => s.num === sess.surahNum);
+            return (
+              <Card key={key} padding="md" className="hover-scale interactive">
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                       <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <BookOpen size={24} />
+                       </div>
+                       <div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Surah {surah?.name} · Session {sess.sessionIndex + 1}</div>
+                          <h4 style={{ fontSize: '16px', fontWeight: 600 }}>{sess.topic}</h4>
+                       </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                       <Button variant="outline" size="sm" icon={<Settings2 size={16} />} onClick={() => setEditingSession({ key, data: {...sess} })}>Edit</Button>
+                       <Button variant="ghost" size="sm"><ExternalLink size={16} /></Button>
+                    </div>
+                 </div>
+              </Card>
+            )
+          })}
+
+          {curriculumList.length === 0 && (
+             <div style={{ padding: '80px', textAlign: 'center', border: '2px dashed var(--border)', borderRadius: 'var(--radius-lg)' }}>
+                <p style={{ color: 'var(--text-muted)' }}>No curriculum data found for this filter. Start by adding a session or importing a CSV.</p>
+             </div>
+          )}
+        </div>
+      </div>
+
+      {/* Manual Editor Modal */}
+      {editingSession && (
+        <div className="admin-gate" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
+           <form className="card glass animate-slide-up" style={{ width: '600px', padding: '32px' }} onSubmit={handleManualSave}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                 <h3 style={{ fontSize: '20px', fontWeight: 700 }}>Edit Session Content</h3>
+                 <button type="button" onClick={() => setEditingSession(null)}><Trash2 size={20} className="error" /></button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                 <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>SESSION TOPIC</label>
+                    <input type="text" style={{ width: '100%' }} value={editingSession.data.topic} onChange={e => setEditingSession({...editingSession, data: {...editingSession.data, topic: e.target.value}})} />
+                 </div>
+                 <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>START AYAH</label>
+                    <input type="number" style={{ width: '100%' }} value={editingSession.data.startAyah} onChange={e => setEditingSession({...editingSession, data: {...editingSession.data, startAyah: parseInt(e.target.value)}})} />
+                 </div>
+                 <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>END AYAH</label>
+                    <input type="number" style={{ width: '100%' }} value={editingSession.data.endAyah} onChange={e => setEditingSession({...editingSession, data: {...editingSession.data, endAyah: parseInt(e.target.value)}})} />
+                 </div>
+                 <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>URDU TAFSEER SUMMARY</label>
+                    <textarea style={{ width: '100%', height: '100px', fontFamily: 'var(--font-urdu)', direction: 'rtl' }} value={editingSession.data.tafseerSummary} onChange={e => setEditingSession({...editingSession, data: {...editingSession.data, tafseerSummary: e.target.value}})} />
+                 </div>
+                 <div style={{ gridColumn: 'span 2' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>PDF STUDY LINK (GDrive)</label>
+                    <input type="text" style={{ width: '100%' }} value={editingSession.data.pdfUrl} onChange={e => setEditingSession({...editingSession, data: {...editingSession.data, pdfUrl: e.target.value}})} />
+                 </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                 <Button type="button" variant="outline" fullWidth onClick={() => setEditingSession(null)}>Discard Changes</Button>
+                 <Button type="submit" fullWidth>Save Session</Button>
+              </div>
+           </form>
         </div>
       )}
 
-      {/* Import Guidance */}
-      <Card padding="sm" className="sessions-page__guide-card">
-        <div className="sessions-page__guide">
-          <Info size={16} className="text-primary" />
-          <span>
-            CSV Format: <code>surah_num, session_index, topic_en, start, end, tafseer_urdu, pdf, audio, video</code>
-          </span>
-        </div>
-      </Card>
-
-      {/* Session Format */}
-      <Card padding="md">
-        <h3 className="sessions-page__section-title">
-          <CalendarCheck size={16} /> WhatsApp Session Format
-        </h3>
-        <div className="sessions-page__format">
-          {sessionSteps.map((step, i) => (
-            <div key={i} className="sessions-page__format-step">
-              <div className="sessions-page__format-num" style={{ background: step.color }}>
-                {i + 1}
-              </div>
-              <div className="sessions-page__format-info">
-                <strong>{step.title}</strong>
-                <span>{step.desc}</span>
-              </div>
+      {/* CSV Import Workbench Placeholder */}
+      {isImporting && (
+         <div className="admin-gate" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
+            <div className="card glass animate-slide-up" style={{ width: '500px', padding: '40px', textAlign: 'center' }}>
+               <AlertCircle size={48} style={{ color: 'var(--primary)', marginBottom: '20px' }} />
+               <h3 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>CSV Data Workbench</h3>
+               <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>Select your mastery CSV file to begin the validation and import process.</p>
+               <input type="file" style={{ marginBottom: '24px' }} />
+               <div style={{ display: 'flex', gap: '12px' }}>
+                  <Button variant="outline" fullWidth onClick={() => setIsImporting(false)}>Cancel</Button>
+                  <Button fullWidth disabled>Validate & Import</Button>
+               </div>
             </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Sessions Queue */}
-      <Card padding="md">
-        <h3 className="sessions-page__section-title">
-          Sessions Queue — {phase.label}
-        </h3>
-        <div className="sessions-page__queue">
-          {allSessions.map(sess => (
-            <div
-              key={sess.key}
-              className={`sessions-page__item ${sess.status?.completed ? 'sessions-page__item--done' : ''}`}
-            >
-              <div className="sessions-page__item-left">
-                <div className={`sessions-page__item-check ${sess.status?.completed ? 'sessions-page__item-check--done' : ''}`}>
-                  {sess.status?.completed && <Check size={12} />}
-                </div>
-                <div className="sessions-page__item-info">
-                  <span className="sessions-page__item-title">
-                    {sess.surah.name} — Session {sess.index + 1}
-                  </span>
-                  <span className="sessions-page__item-arabic arabic" style={{ fontSize: '14px' }}>
-                    {sess.surah.arabic}
-                  </span>
-                  {sess.status?.topic && (
-                    <span className="sessions-page__item-topic">{sess.status.topic}</span>
-                  )}
-                </div>
-              </div>
-              <div className="sessions-page__item-right">
-                {sess.status?.completed ? (
-                  <Badge color="green" size="sm">Done</Badge>
-                ) : (
-                  <button
-                    className="sessions-page__mark-btn"
-                    onClick={() => completeSession(sess.surah.num, sess.index)}
-                  >
-                    Complete <ChevronRight size={14} />
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-    </motion.div>
+         </div>
+      )}
+    </div>
   );
 }

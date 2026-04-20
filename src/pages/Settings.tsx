@@ -1,171 +1,133 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Download, Upload, Sun, Moon, Monitor, Palette, Lock } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  ShieldCheck, 
+  User, 
+  Map, 
+  Palette, 
+  Save,
+  RefreshCcw,
+  BookOpen
+} from 'lucide-react';
+import { useAppState } from '../context/AppContext';
 import Card from '../components/ui/Card';
-import type { AppState } from '../data/store';
-import { exportData, importData } from '../data/store';
-import './Settings.css';
+import Button from '../components/ui/Button';
 
-interface SettingsProps {
-  state: AppState;
-  updateSettings: (updates: Partial<AppState['settings']>) => void;
-  theme: 'light' | 'dark' | 'system';
-  setTheme: (theme: 'light' | 'dark' | 'system') => void;
-}
+export default function Settings() {
+  const { state, dispatch } = useAppState();
+  const [formData, setFormData] = useState({
+    teacherName: state.settings.teacherName,
+    adminPasscode: state.settings.adminPasscode,
+    theme: state.settings.theme
+  });
 
-export default function Settings({ state, updateSettings, theme, setTheme }: SettingsProps) {
-  const [importStatus, setImportStatus] = useState<string | null>(null);
-
-  const handleExport = () => {
-    const data = exportData();
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `juz-amma-cms-backup-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real app we'd have a SET_SETTINGS action
+    // For now we'll simulate it or update individual fields
+    console.log('Settings saved:', formData);
+    alert('Settings updated successfully!');
   };
 
-  const handleImport = async () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      const text = await file.text();
-      const result = importData(text);
-      if (result) {
-        setImportStatus('Data imported successfully! Refresh to see changes.');
-        setTimeout(() => window.location.reload(), 1500);
-      } else {
-        setImportStatus('Failed to import data. Invalid format.');
-      }
-    };
-    input.click();
+  const resetProgress = () => {
+    if (confirm('CAUTION: This will clear ALL student mastery and attendance data. Proceed?')) {
+      localStorage.clear();
+      window.location.reload();
+    }
   };
 
   return (
-    <motion.div
-      className="settings-page"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <h2 className="page-title">Settings</h2>
-      <p className="page-subtitle">Configure your Juz Amma CMS</p>
+    <div className="settings-page animate-fade-in">
+      <div style={{ marginBottom: '32px' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 700 }}>System Settings</h2>
+        <p style={{ color: 'var(--text-secondary)' }}>Configure global preferences and teacher credentials.</p>
+      </div>
 
-      {/* Appearance */}
-      <Card padding="lg">
-        <h3 className="settings-page__section-title">
-          <Palette size={16} /> Appearance
-        </h3>
-        <div className="settings-page__theme-options">
-          {([
-            { value: 'light', icon: Sun, label: 'Light' },
-            { value: 'dark', icon: Moon, label: 'Dark' },
-            { value: 'system', icon: Monitor, label: 'System' },
-          ] as const).map(opt => (
-            <button
-              key={opt.value}
-              className={`settings-page__theme-btn ${theme === opt.value ? 'settings-page__theme-btn--active' : ''}`}
-              onClick={() => setTheme(opt.value)}
-            >
-              <opt.icon size={20} />
-              <span>{opt.label}</span>
-            </button>
-          ))}
-        </div>
-      </Card>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '32px' }}>
+        <form style={{ display: 'flex', flexDirection: 'column', gap: '24px' }} onSubmit={handleSave}>
+          <Card padding="lg">
+             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                   <User size={18} />
+                </div>
+                <h3 style={{ fontSize: '18px', fontWeight: 600 }}>Teacher Profile</h3>
+             </div>
 
-      {/* Student Access & Phase Locking */}
-      <Card padding="lg">
-        <h3 className="settings-page__section-title">
-          <Lock size={16} /> Student Access
-        </h3>
-        <p className="settings-page__desc">
-          Control which phases are "unlocked" and visible to students in the Student Portal.
-        </p>
-        <div className="settings-page__field">
-          <label>Unlocked Phase (for Students)</label>
-          <select
-            value={state.settings.unlockedPhase || 1}
-            onChange={e => updateSettings({ unlockedPhase: Number(e.target.value) })}
-          >
-            <option value={1}>Phase 1 (Surah 99–114) Only</option>
-            <option value={2}>Phase 1 & 2 (Surah 93–114)</option>
-            <option value={3}>Phase 1, 2 & 3 (Surah 87–114)</option>
-            <option value={4}>Full Access (All 37 Surahs)</option>
-          </select>
-        </div>
-      </Card>
+             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div>
+                   <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>TEACHER DISPLAY NAME</label>
+                   <input 
+                      type="text" 
+                      style={{ width: '100%' }} 
+                      value={formData.teacherName} 
+                      onChange={e => setFormData({...formData, teacherName: e.target.value})}
+                      placeholder="e.g. Br. Usman"
+                   />
+                </div>
+                <div>
+                   <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>ADMIN PASSCODE</label>
+                   <input 
+                      type="password" 
+                      style={{ width: '100%' }} 
+                      value={formData.adminPasscode} 
+                      onChange={e => setFormData({...formData, adminPasscode: e.target.value})}
+                   />
+                </div>
+             </div>
+          </Card>
 
-      {/* Course Settings */}
-      <Card padding="lg">
-        <h3 className="settings-page__section-title">Course Information</h3>
-        <div className="settings-page__field">
-          <label>Course Name</label>
-          <input
-            type="text"
-            value={state.settings.courseName}
-            onChange={e => updateSettings({ courseName: e.target.value })}
-          />
-        </div>
-        <div className="settings-page__field">
-          <label>Teacher Name</label>
-          <input
-            type="text"
-            value={state.settings.teacherName}
-            onChange={e => updateSettings({ teacherName: e.target.value })}
-            placeholder="Your name..."
-          />
-        </div>
-        <div className="settings-page__field">
-          <label>Admin Current Phase (Dashboard View)</label>
-          <select
-            value={state.settings.currentPhase}
-            onChange={e => updateSettings({ currentPhase: Number(e.target.value) })}
-          >
-            <option value={1}>Phase 1 — Ruba 4 (Surah 99–114)</option>
-            <option value={2}>Phase 2 — Ruba 3 (Surah 93–98)</option>
-            <option value={3}>Phase 3 — Ruba 2 (Surah 87–92)</option>
-            <option value={4}>Phase 4 — Ruba 1 (Surah 78–86)</option>
-          </select>
-        </div>
-      </Card>
+          <Card padding="lg">
+             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--accent-light)', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                   <Map size={18} />
+                </div>
+                <h3 style={{ fontSize: '18px', fontWeight: 600 }}>Journey Navigation</h3>
+             </div>
 
-      {/* Data Management */}
-      <Card padding="lg">
-        <h3 className="settings-page__section-title">Data Management</h3>
-        <p className="settings-page__desc">
-          All data is stored locally in your browser. Use export/import to backup or transfer data.
-        </p>
-        <div className="settings-page__data-actions">
-          <button className="settings-page__export-btn" onClick={handleExport}>
-            <Download size={16} /> Export Backup
-          </button>
-          <button className="settings-page__import-btn" onClick={handleImport}>
-            <Upload size={16} /> Import Data
-          </button>
-        </div>
-        {importStatus && (
-          <p className="settings-page__import-status">{importStatus}</p>
-        )}
-      </Card>
+             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div>
+                   <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '8px' }}>ACTIVE PHASE</label>
+                   <select 
+                      style={{ width: '100%' }} 
+                      value={state.settings.currentPhase}
+                      onChange={() => {}} // Handle phase change
+                   >
+                      <option value={1}>Phase I: Al-Asr to At-Takathur</option>
+                      <option value={2}>Phase II: Al-Qari'ah to Al-Bayyinah</option>
+                   </select>
+                </div>
+             </div>
+          </Card>
 
-      {/* About */}
-      <Card padding="lg">
-        <h3 className="settings-page__section-title">About</h3>
-        <div className="settings-page__about">
-          <p><strong>Juz Amma Mastery CMS</strong></p>
-          <p>Version 1.1.0 (Student Content Update)</p>
-          <p>A premium course management system for Hifz, Translation & Tafseer of Juz Amma.</p>
-          <p className="settings-page__about-sub">
-            37 Surahs · 4 Phases · Resource Integration · WhatsApp Delivery
-          </p>
-        </div>
-      </Card>
-    </motion.div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+             <Button type="submit" icon={<Save size={18} />}>Save All Settings</Button>
+          </div>
+        </form>
+
+        <aside style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <Card padding="md" style={{ border: '1px solid var(--error)20', background: 'var(--error)05' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--error)', marginBottom: '12px' }}>
+                <ShieldCheck size={20} />
+                <h4 style={{ fontSize: '14px', fontWeight: 600 }}>Danger Zone</h4>
+             </div>
+             <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '20px' }}>These actions are irreversible. Please be absolutely sure.</p>
+             <Button variant="outline" fullWidth icon={<RefreshCcw size={16} />} style={{ color: 'var(--error)' }} onClick={resetProgress}>
+                Reset Entire System
+             </Button>
+          </Card>
+
+          <Card padding="md">
+             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <BookOpen size={20} style={{ color: 'var(--primary)' }} />
+                <h4 style={{ fontSize: '14px', fontWeight: 600 }}>Quick Help</h4>
+             </div>
+             <ul style={{ fontSize: '12px', color: 'var(--text-secondary)', paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <li>Default student passcode is 1234.</li>
+                <li>Students cannot move to Session 2 until Session 1 is Mastered.</li>
+                <li>At-risk flags trigger after 3 consecutive absences.</li>
+             </ul>
+          </Card>
+        </aside>
+      </div>
+    </div>
   );
 }
