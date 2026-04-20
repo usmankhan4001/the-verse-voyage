@@ -4,8 +4,6 @@ services:
   verse-voyage:
     build: .
     container_name: verse-voyage
-    ports:
-      - "80:80"
     restart: always
     networks:
       - dokploy-network
